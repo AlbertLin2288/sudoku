@@ -24,6 +24,7 @@
 # when x2 change, for example set to 1
 # first solve x1!=1, and update it
 # and then update x3, so it can update it's parents
+# end keep track of must(each one of 1-9 must exist)
 
 
 
@@ -67,8 +68,28 @@
 #         self.grids[pos[0]][pos[1]].moved = True
 
 class Variable:
-    def __init__(self) -> None:
-        pass
+    """the lower lvl is, the less dependant it is on other variables"""
+    def __init__(self, values, lvl=0) -> None:
+        self.values = values
+        self.var_values = []
+        self.exception = []
+        self.children = []
+        self.lvl = lvl
+    
+    def can_var(self, variable):
+        variable.children.append(self)
+        self.var_values.append(variable)
+        self.var_values.sort(key=lambda x:x.lvl)
+
+    def cant_var(self, variable):
+        """value not equal to variable"""
+        variable.children.append(self)
+        self.exception.append(variable)
+    
+    def set(self, value):
+        if value not in self.values:
+            pass
+        # some var must be value
 
 # Test = True
 # if not Test:
