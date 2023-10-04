@@ -5,9 +5,12 @@
 # for each number: avilable slot
 
 class Sudoku:
+    """The board and rules"""
     def __init__(self) -> None:
-        pass
+        self.board = [[Number() for c in range(9)] for r in range(9)]
+        self.rules = []
 
-class number:
+class Number:
+    """The number"""
     def __init__(self) -> None:
         pass
