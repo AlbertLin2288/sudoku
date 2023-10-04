@@ -8,7 +8,8 @@ class Sudoku:
     """The board and rules"""
     def __init__(self) -> None:
         self.board = [[Number() for c in range(9)] for r in range(9)]
-        self.rules = []
+        self.has_rules = [] # [value, Number...] must have one number = value
+        self.no_dupe_rules = [] # [Number, Number..., int, int...] must not dupe
 
 class Number:
     """The number"""
