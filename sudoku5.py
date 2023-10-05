@@ -145,14 +145,15 @@ class Number:
         """set self to value"""
         self.possible = value
         update_list = set() # don't ask me why this is a set
-        for i in self.has_rules:
-            if value == self.has_rules[i][0]: # has_rule satisified
+        for i, has_rule in self.has_rules.items():
+            if value == has_rule[0]: # has_rule satisified
                 self.board.has_rule_true(i)
             else:
-                has_rule = self.has_rules[i]
                 has_rule.remove(self)
                 if len(has_rule) == 1:
                     self.board.error()
                     return None
-                elif len(has_rule) == 2:
-                    update_list.add(has_rule[1])
+                if len(has_rule) == 2:
+                    update_list.add((has_rule[1], has_rule[0]))
+        for num, value in update_list:
+            num.set2(value)
