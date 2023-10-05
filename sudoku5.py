@@ -16,22 +16,50 @@ class Sudoku:
             self.no_dupe_rules = {} # {id:[Number, Number..., int, int...]}
                                     # there can't be dupelicate in list
             self.id = 0 # largest unused id
-            for r in range(9):
+            for r in range(9): # add rules to rows
                 for i in range(9):
                     has_rule = [i]
                     self.has_rules[self.id] = has_rule
-                    self.id += 1
                     for c in range(9):
                         has_rule.append(self.board[r][c])
                         self.board[r][c].has_rules[self.id] = has_rule
-            for c in range(9):
+                    self.id += 1
+                no_dupe_rule = []
+                self.no_dupe_rules[self.id] = no_dupe_rule
+                for c in range(9):
+                    no_dupe_rule.append(self.board[r][c])
+                    self.board[r][c].do_dupe_rules[self.id] = no_dupe_rule
+                self.id += 1
+            for c in range(9): # add rules to columns
                 for i in range(9):
                     has_rule = [i]
                     self.has_rules[self.id] = has_rule
-                    self.id += 1
                     for r in range(9):
                         has_rule.append(self.board[r][c])
                         self.board[r][c].has_rules[self.id] = has_rule
+                    self.id += 1
+                no_dupe_rule = []
+                self.no_dupe_rules[self.id] = no_dupe_rule
+                for r in range(9):
+                    no_dupe_rule.append(self.board[r][c])
+                    self.board[r][c].do_dupe_rules[self.id] = no_dupe_rule
+                self.id += 1
+            for block in range(9): # for each block
+                for i in range(9):
+                    has_rule = [i]
+                    self.has_rules[self.id] = has_rule
+                    for p in range(9): # the cord in the flattened block
+                        number = self.board[block//3*3+p//3][block%3*3+p%3]
+                        has_rule.append(number)
+                        number.has_rules[self.id] = has_rule
+                    self.id += 1
+                no_dupe_rule = []
+                self.no_dupe_rules[self.id] = no_dupe_rule
+                for p in range(9):
+                    number = self.board[block//3*3+p//3][block%3*3+p%3]
+                    no_dupe_rule.append(number)
+                    number.no_dupe_rules[self.id] = no_dupe_rule
+                self.id += 1
         else:
             # make self a deepcopy of copy
             self.board = []
