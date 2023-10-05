@@ -99,12 +99,12 @@ class Sudoku:
 
     def update_has_rules(self, ids):
         """update the has_rules with id in ids
-        check if there is child of rules"""
-        pass
+        check if there is only one element in rule
+        check if there is child of rule"""
 
     def update_do_dupe_rules(self, ids):
-        """update the no_dupe_rules with id in ids"""
-        pass
+        """update the no_dupe_rules with id in ids
+        check if there is child has_rule"""
 
 
 class Number:
