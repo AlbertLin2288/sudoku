@@ -8,7 +8,7 @@ class Sudoku:
     """The board and rules"""
     def __init__(self, copy=None) -> None:
         """if copy, become a copy of copy"""
-        if copy is not None:
+        if copy is None:
             self.board = [[Number(self, r, c) for c in range(9)]
                            for r in range(9)]
             self.has_rules = {} # {id:[value, Number...]}
@@ -28,7 +28,7 @@ class Sudoku:
                 self.no_dupe_rules[self.id] = no_dupe_rule
                 for c in range(9):
                     no_dupe_rule.append(self.board[r][c])
-                    self.board[r][c].do_dupe_rules[self.id] = no_dupe_rule
+                    self.board[r][c].no_dupe_rules[self.id] = no_dupe_rule
                 self.id += 1
             for c in range(9): # add rules to columns
                 for i in range(9):
@@ -42,7 +42,7 @@ class Sudoku:
                 self.no_dupe_rules[self.id] = no_dupe_rule
                 for r in range(9):
                     no_dupe_rule.append(self.board[r][c])
-                    self.board[r][c].do_dupe_rules[self.id] = no_dupe_rule
+                    self.board[r][c].no_dupe_rules[self.id] = no_dupe_rule
                 self.id += 1
             for block in range(9): # for each block
                 for i in range(9):
