@@ -109,9 +109,15 @@ class Sudoku:
         """update the has_rules
         check if there is only one element in rule
             update: check this when removing element in rule
-        check if there is child of rule"""
+        check if there is parent/child of rule"""
         for i in self.has_ids:
             has_rule = self.has_rules[i]
+            for has_rule2 in self.has_rules:
+                if all((j in has_rule for j in has_rule2)): # rule2 is a child
+                    if has_rule[0] == has_rule2[0]:
+                        # remove has_rule
+                        self.has_rule_true(i)
+                        continue
 
     def update_do_dupe_rules(self, ids):
         """update the no_dupe_rules
@@ -145,6 +151,7 @@ class Number:
         """set self to value"""
         self.possible = value
         update_list = set() # don't ask me why this is a set
+        update_list2 = set()
         for i, has_rule in self.has_rules.items():
             if value == has_rule[0]: # has_rule satisified
                 self.board.has_rule_true(i)
@@ -152,8 +159,15 @@ class Number:
                 has_rule.remove(self)
                 if len(has_rule) == 1:
                     self.board.error()
-                    return None
+                    return
                 if len(has_rule) == 2:
                     update_list.add((has_rule[1], has_rule[0]))
-        for num, value in update_list:
-            num.set2(value)
+        for i, no_dupe_rule in self.no_dupe_rules.items():
+            if value in no_dupe_rule:
+                self.board.error()
+                return
+            for num in no_dupe_rule:
+                if num != self:
+                    update_list2.add(num)
+        for num, value2 in update_list:
+            num.set2(value2)
