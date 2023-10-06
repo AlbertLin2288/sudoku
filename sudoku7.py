@@ -1,3 +1,11 @@
+# I'm starting to do this too often
+# this is a branch from sudoku6
+# to test if a solution exist, just test it
+# however, this will make it difficult to see
+# if there's a reduction in possiblity
+# so most of the code is similar
+# I'm just not sure if this will work as thinking about sudoku has tire me out
+
 # here we go again
 # instead of rule, just make them constant and builtin
 # the checking is done by number
