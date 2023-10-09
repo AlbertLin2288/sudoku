@@ -77,15 +77,19 @@ class Number:
     def remove(self, value):
         """remove value from possible
         if not in value, return false"""
-        if value not in self.possible:
+        if len(self) == 1 or value not in self.possible:
             return False
         self.possible.remove(value)
         if len(self.possible) == 1: # self is determinted
             for group in self.groups:
                 group[0].remove(self)
-                group[1].remove(self.possible[0])
-                if not any((num.remove(self.possible[0]) for num in group[0])):
-                    pass
+                if self.possible[0] in group[1]:
+                    group[1].remove(self.possible[0])
+                    for num in group[0]:
+                        num.remove(self.possible[0])
+                else:
+                    self.board.error()
+
         # update related number
         return True
 
