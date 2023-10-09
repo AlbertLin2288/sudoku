@@ -51,8 +51,9 @@ class Sudoku:
                             for c in range(9)] for r in range(9)]
             self.flat_board = [self.board[i//9][i%9] for i in range(81)]
 
-    def error(self):
+    def error(self, info="Error"):
         """an error has occured"""
+        raise ValueError(info)
 
     def set(self, pos, value):
         """set number at pos to value"""
@@ -94,18 +95,19 @@ class Number:
     def remove(self, value):
         """remove value from possible
         if not in value, return false"""
-        if len(self) == 1 or value not in self.possible:
+        if len(self.possible) == 1 or value not in self.possible:
             return False
         self.possible.remove(value)
         if len(self.possible) == 1: # self is determinted
-            for group in self.groups.values():
+            for i, group in self.groups.items():
                 group[0].remove(self)
                 if self.possible[0] in group[1]:
                     group[1].remove(self.possible[0])
-                    for num in group[0]:
-                        num.remove(self.possible[0])
-                else:
-                    self.board.error()
+                if not any((num.remove(self.possible[0]) for num in group[0])):
+                    self.board.error(f"Removing {str(value)} from " +\
+                                      "{'ABCDEFGHI'[self.r]}"+\
+                                     f"{'abcdefghi'[self.c]} cause group {i}" +\
+                                      " to fail")
 
         # update related number
         return True

@@ -11,8 +11,9 @@ class Sudoku(sudoku7.Sudoku):
                 board += "{:<12}".format(possible)
             board += "\n"
         groups = ""
-        for i in self.groups.values():
-            groups += "{:<12}".format("".join((str(k) for k in i[1])))
-            groups += "  ".join(("ABCDEFGHIJ"[j.r] +\
-                                 "abcdefghi"[j.c] for j in i[0]))+"\n"
+        for i, j in self.groups.items():
+            groups += "{:<3}: ".format(str(i))
+            groups += "{:<12}".format("".join((str(k) for k in j[1])))
+            groups += "  ".join(("ABCDEFGHIJ"[k.r] +\
+                                 "abcdefghi"[k.c] for k in j[0]))+"\n"
         return board +"\n\n\n" + groups
