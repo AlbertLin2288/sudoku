@@ -20,31 +20,36 @@ class Sudoku:
             self.board = [[Number(self, r*9+c) for c in range(9)]
                            for r in range(9)]
             self.flat_board = [self.board[i//9][i%9] for i in range(81)]
-            self.groups = []
+            self.groups = {}
+            self.id = 0
             for r in range(9):
                 group = [self.flat_board[r*9:r*9+9], list(range(1,10))]
-                self.groups.append(group)
-                for num in group:
-                    num.groups.append(group)
+                self.groups[self.id] = group
+                for num in group[0]:
+                    num.groups[self.id] = group
+                self.id += 1
             for c in range(9):
                 group = [self.flat_board[c::9], list(range(1,10))]
-                self.groups.append(group)
-                for num in group:
-                    num.groups.append(group)
+                self.groups[self.id] = group
+                for num in group[0]:
+                    num.groups[self.id] = group
+                self.id += 1
             for block in range(9):
                 group = [self.board[block//3*3][block%3*3:block%3*3+3]+\
                          self.board[block//3*3+1][block%3*3:block%3*3+3]+\
                          self.board[block//3*3+2][block%3*3:block%3*3+3],
                            list(range(1,10))]
-                self.groups.append(group)
-                for num in group:
-                    num.groups.append(group)
+                self.groups[self.id] = group
+                for num in group[0]:
+                    num.groups[self.id] = group
+                self.id += 1
         else:
-            # make self a deepcopy of copy
-            self.init_as_copy(copy)
-        
-    def init_as_copy(self, copy):
-        """init as a deepcopy of copy"""
+                # make self a deepcopy of copy
+            self.groups = {i:[[], copy.groups[i][1][:]] for i in copy.groups}
+            self.id = copy.id
+            self.board = [[Number(self, copy = copy.board[r][c])
+                            for c in range(9)] for r in range(9)]
+            self.flat_board = [self.board[i//9][i%9] for i in range(81)]
 
     def error(self):
         """an error has occured"""
@@ -58,14 +63,26 @@ class Sudoku:
 
 class Number:
     """The number"""
-    def __init__(self, board:Sudoku, pos) -> None:
+    def __init__(self, board:Sudoku, pos=None, copy=None) -> None:
         self.board = board
-        self.pos = pos
-        self.r, self.c = divmod(pos, 9)
-        self.block = self.r//3, self.c//3
-        self.block_pos = self.r%3, self.c%3
-        self.possible = [1,2,3,4,5,6,7,8,9]
-        self.groups = []
+        if copy is None:
+            self.pos = pos
+            self.r, self.c = divmod(pos, 9)
+            self.block = self.r//3, self.c//3
+            self.block_pos = self.r%3, self.c%3
+            self.possible = [1,2,3,4,5,6,7,8,9]
+            self.groups = {}
+        else:
+            self.pos = copy.pos
+            self.r = copy.r
+            self.c = copy.c
+            self.block = copy.block
+            self.block_pos = copy.block_pos
+            self.possible = copy.possible[:]
+            self.groups = {}
+            for i in copy.groups:
+                self.groups[i] = self.board.groups[i]
+                self.board.groups[i][0].append(self)
 
     def set(self, value):
         """set possible to value"""
@@ -81,7 +98,7 @@ class Number:
             return False
         self.possible.remove(value)
         if len(self.possible) == 1: # self is determinted
-            for group in self.groups:
+            for group in self.groups.values():
                 group[0].remove(self)
                 if self.possible[0] in group[1]:
                     group[1].remove(self.possible[0])
