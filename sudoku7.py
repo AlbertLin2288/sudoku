@@ -23,13 +23,15 @@ class Sudoku:
             self.groups = {}
             self.id = 0
             for r in range(9):
-                group = [self.flat_board[r*9:r*9+9], list(range(1,10))]
+                group = [self.flat_board[r*9:r*9+9], 
+                         {i:9 for i in range(1,10)}]
                 self.groups[self.id] = group
                 for num in group[0]:
                     num.groups[self.id] = group
                 self.id += 1
             for c in range(9):
-                group = [self.flat_board[c::9], list(range(1,10))]
+                group = [self.flat_board[c::9],
+                         {i:9 for i in range(1,10)}]
                 self.groups[self.id] = group
                 for num in group[0]:
                     num.groups[self.id] = group
@@ -38,14 +40,14 @@ class Sudoku:
                 group = [self.board[block//3*3][block%3*3:block%3*3+3]+\
                          self.board[block//3*3+1][block%3*3:block%3*3+3]+\
                          self.board[block//3*3+2][block%3*3:block%3*3+3],
-                           list(range(1,10))]
+                         {i:9 for i in range(1,10)}]
                 self.groups[self.id] = group
                 for num in group[0]:
                     num.groups[self.id] = group
                 self.id += 1
         else:
                 # make self a deepcopy of copy
-            self.groups = {i:[[], copy.groups[i][1][:]] for i in copy.groups}
+            self.groups = {i:[[], copy.groups[i][1].copy()] for i in copy.groups}
             self.id = copy.id
             self.board = [[Number(self, copy = copy.board[r][c])
                             for c in range(9)] for r in range(9)]
@@ -87,6 +89,9 @@ class Number:
 
     def set(self, value):
         """set possible to value"""
+        if value not in self.possible:
+            self.board.error(f"{'ABCDEFGHI'[self.r]+'abcdefghi'[self.c]}" +\
+                             f" can't be {str(value)}")
         removed = self.possible[:]
         removed.remove(value)
         for val in removed:
@@ -98,15 +103,23 @@ class Number:
         if len(self.possible) == 1 or value not in self.possible:
             return False
         self.possible.remove(value)
+        for i in self.groups.values():
+            val = i[1][value]
+            if val>1:
+                i[1][value] = val-1
+            else:
+                self.board.error(f"Removing {str(value)} from " +\
+                                 f"{'ABCDEFGHI'[self.r]}"+\
+                                 f"{'abcdefghi'[self.c]} cause group {i}" +\
+                                  " to fail")
+
         if len(self.possible) == 1: # self is determinted
             for i, group in self.groups.items():
                 group[0].remove(self)
-                if self.possible[0] in group[1]:
-                    group[1].remove(self.possible[0])
                 if not any((num.remove(self.possible[0]) for num in group[0])):
                     self.board.error(f"Removing {str(value)} from " +\
-                                      "{'ABCDEFGHI'[self.r]}"+\
-                                     f"{'abcdefghi'[self.c]} cause group {i}" +\
+                                     f"{'ABCDEFGHI'[self.r]}"+\
+                                     f"{'abcdefghi'[self.c]} cause group {i}"+\
                                       " to fail")
 
         # update related number
