@@ -1,21 +1,10 @@
-# I'm starting to do this too often
-# this is a branch from sudoku6
-# to test if a solution exist, just test it
-# however, this will make it difficult to see
-# if there's a reduction in possiblity
-# so most of the code is similar
-# I'm just not sure if this will work as thinking about sudoku has tire me out
-
-# here we go again
-# instead of rule, just make them constant and builtin
-# the checking is done by number
-# add group
-
-# problem:
-# can't discover sub-group
+# going back to sudoku2
+# based on sudoku7
+# instead of 1 rule per ...
+# use 9 different rules to allow easier check of relations
 
 class Sudoku:
-    """The board and rules"""
+    """The board and rules."""
     def __init__(self, copy=None) -> None:
         """if copy, become a copy of copy""" 
         if copy is None:
@@ -126,28 +115,3 @@ class Number:
 
         # update related number
         return True
-
-#     def set2(self, value):
-#         """set self to value"""
-#         self.possible = value
-#         update_list = set() # don't ask me why this is a set
-#         update_list2 = set()
-#         for i, has_rule in self.has_rules.items():
-#             if value == has_rule[0]: # has_rule satisified
-#                 self.board.has_rule_true(i)
-#             else:
-#                 has_rule.remove(self)
-#                 if len(has_rule) == 1:
-#                     self.board.error()
-#                     return
-#                 if len(has_rule) == 2:
-#                     update_list.add((has_rule[1], has_rule[0]))
-#         for i, no_dupe_rule in self.no_dupe_rules.items():
-#             if value in no_dupe_rule:
-#                 self.board.error()
-#                 return
-#             for num in no_dupe_rule:
-#                 if num != self:
-#                     update_list2.add(num)
-#         for num, value2 in update_list:
-#             num.set2(value2)
