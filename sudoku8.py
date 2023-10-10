@@ -11,35 +11,39 @@ class Sudoku:
             self.board = [[Number(self, r*9+c) for c in range(9)]
                            for r in range(9)]
             self.flat_board = [self.board[i//9][i%9] for i in range(81)]
-            self.groups = {}
-            self.id = 0
+            self.groups = {i:{} for i in range(1,10)}
+            self.id = {i:0 for i in range(1,10)}
             for r in range(9):
-                group = [self.flat_board[r*9:r*9+9], 
-                         {i:9 for i in range(1,10)}]
-                self.groups[self.id] = group
-                for num in group[0]:
-                    num.groups[self.id] = group
-                self.id += 1
+                group = self.flat_board[r*9:r*9+9]
+                for value in range(1,10):
+                    group2 = group[:]
+                    self.groups[value][self.id[value]] = group2
+                    for num in group:
+                        num.groups[value][self.id[value]] = group2
+                    self.id[value] += 1
             for c in range(9):
-                group = [self.flat_board[c::9],
-                         {i:9 for i in range(1,10)}]
-                self.groups[self.id] = group
-                for num in group[0]:
-                    num.groups[self.id] = group
-                self.id += 1
+                group = self.flat_board[c::9]
+                for value in range(1,10):
+                    group2 = group[:]
+                    self.groups[value][self.id[value]] = group2
+                    for num in group:
+                        num.groups[value][self.id[value]] = group2
+                    self.id[value] += 1
             for block in range(9):
-                group = [self.board[block//3*3][block%3*3:block%3*3+3]+\
-                         self.board[block//3*3+1][block%3*3:block%3*3+3]+\
-                         self.board[block//3*3+2][block%3*3:block%3*3+3],
-                         {i:9 for i in range(1,10)}]
-                self.groups[self.id] = group
-                for num in group[0]:
-                    num.groups[self.id] = group
-                self.id += 1
+                group = self.board[block//3*3][block%3*3:block%3*3+3]+\
+                        self.board[block//3*3+1][block%3*3:block%3*3+3]+\
+                        self.board[block//3*3+2][block%3*3:block%3*3+3]
+                for value in range(1,10):
+                    group2 = group[:]
+                    self.groups[value][self.id[value]] = group2
+                    for num in group:
+                        num.groups[value][self.id[value]] = group2
+                    self.id[value] += 1
         else:
                 # make self a deepcopy of copy
-            self.groups = {i:[[], copy.groups[i][1].copy()] for i in copy.groups}
-            self.id = copy.id
+            self.groups = {value: {i:[] for i in copy.groups[value]}
+                            for value in range(1,10)}
+            self.id = copy.id.copy()
             self.board = [[Number(self, copy = copy.board[r][c])
                             for c in range(9)] for r in range(9)]
             self.flat_board = [self.board[i//9][i%9] for i in range(81)]
@@ -65,7 +69,7 @@ class Number:
             self.block = self.r//3, self.c//3
             self.block_pos = self.r%3, self.c%3
             self.possible = [1,2,3,4,5,6,7,8,9]
-            self.groups = {}
+            self.groups = {i:{} for i in range(1,10)}
         else:
             self.pos = copy.pos
             self.r = copy.r
@@ -73,10 +77,11 @@ class Number:
             self.block = copy.block
             self.block_pos = copy.block_pos
             self.possible = copy.possible[:]
-            self.groups = {}
-            for i in copy.groups:
-                self.groups[i] = self.board.groups[i]
-                self.board.groups[i][0].append(self)
+            self.groups = {i:{} for i in range(1,10)}
+            for value in range(1,10):
+                for i in copy.groups[value]:
+                    self.groups[value][i] = self.board.groups[value][i]
+                    self.board.groups[value][i].append(self)
 
     def set(self, value):
         """set possible to value"""
