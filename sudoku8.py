@@ -99,15 +99,14 @@ class Number:
         if len(self.possible) == 1 or value not in self.possible:
             return False
         self.possible.remove(value)
-        for i in self.groups.values():
-            val = i[1][value]
-            if val>1:
-                i[1][value] = val-1
-            else:
+        for i,l in self.groups[value].items():
+            l.remove(self)
+            if len(l) == 0:
                 self.board.error(f"Removing {str(value)} from " +\
                                  f"{'ABCDEFGHI'[self.r]}"+\
                                  f"{'abcdefghi'[self.c]} cause group {i}" +\
-                                  " to fail")
+                                  " to has no solution.")
+            # futher update group
 
         if len(self.possible) == 1: # self is determinted
             for i, group in self.groups.items():
@@ -120,3 +119,6 @@ class Number:
 
         # update related number
         return True
+
+
+# stopped because don't know how to compare group(line 109)
