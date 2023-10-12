@@ -35,8 +35,8 @@ class Sudoku:
                         has_rule.append(number)
                         number.has_rules[self.id] = has_rule
                     self.id += 1
-                no_dupe = (self.board[block//3*3+p//3][block%3*3+p%3]
-                           for p in range(9))
+                no_dupe = [self.board[block//3*3+p//3][block%3*3+p%3]
+                           for p in range(9)]
                 for num in no_dupe:
                     num.no_dupe_rule.update(no_dupe)
             for num in self.flat_board:
@@ -44,7 +44,7 @@ class Sudoku:
         else:
             # make self a deepcopy of copy
             self.init_as_copy(copy)
-        
+
     def init_as_copy(self, copy):
         """init as a deepcopy of copy"""
         self.board = []
@@ -54,7 +54,7 @@ class Sudoku:
         for r in range(9):
             row = []
             for c,i in enumerate(copy.board[r]):
-                if type(i) == Number:
+                if isinstance(i, Number):
                     row.append(Number(self, r, c))
                 else:
                     row.append(i)
@@ -72,7 +72,14 @@ class Sudoku:
                 num.no_dupe_rule.add(self.flat_board[j.pos])
 
     def set_number(self, pos, value):
-        pass
+        """set pos to value"""
+        if isinstance(pos, str):
+            self.board["ABCDEFGHI".index(pos[0])]\
+                ["abcdefghi".index(pos[1])].set(value)
+        elif isinstance(pos, int):
+            self.flat_board[pos].set(value)
+        elif isinstance(pos, tuple):
+            self.flat_board[pos[0]*9+pos[1]].set(value)
 
     def add_has_rule(self, value, cords):
         """add has_rule value with numbers at cords"""
@@ -115,12 +122,15 @@ class Number:
         self.board = board
         self.pos = r*9+c
         self.r, self.c = r, c
+        self.name = "ABCDEFGHI"[r]+"abcdefghi"[c]
         self.has_rules = {}
-        self.no_dupe_rule = set()
+        self.no_dupe_rule = set() # only Number
         self.possible = [1,2,3,4,5,6,7,8,9]
 
-    def set(self):
+    def set(self, value):
         """replace self with int"""
+        # to do: replace self with int
+        self.set2(value)
 
     def remove(self, value):
         """remove value as a possibility
@@ -129,33 +139,56 @@ class Number:
         if value not in self.possible:
             return False
         self.possible.remove(value)
-        for i,has_rule in self.has_rules.items():
+        for i,has_rule in self.has_rules.copy().items():
             if has_rule[0] != value:
                 continue
+            has_rule.remove(self)
+            self.has_rules.pop(i)
             if len(has_rule) == 1:
                 self.board.error(f"Removing {str(value)} from " +\
-                                 f"{'ABCDEFGHI'[self.r]}"+\
-                                 f"{'abcdefghi'[self.c]} cause " +\
+                                 f"{self.name} cause " +\
                                  f"has_rule {i} to has fail.")
+                continue
+            if len(has_rule) == 2:
+                self.board.has_rule_true(i)
+                has_rule[1].set2(has_rule[0])
+                continue
+            
             # futher update group
 
         if len(self.possible) == 1: # self is determinted
-            pass
+            self._set3()
 
 
     def set2(self, value):
         """set self to value"""
-        self.possible = value
-        update_list = set() # don't ask me why this is a set
+        for i in self.possible[:]:
+            if i == value:
+                continue
+            self.remove(i)
+        # self.possible = value
+        # update_list = set() # don't ask me why this is a set
+        # for i, has_rule in self.has_rules.items():
+        #     if value == has_rule[0]: # has_rule satisified
+        #         self.board.has_rule_true(i)
+        #     else:
+        #         has_rule.remove(self)
+        #         if len(has_rule) == 1:
+        #             self.board.error()
+        #             return
+        #         if len(has_rule) == 2:
+        #             update_list.add((has_rule[1], has_rule[0]))
+        # for num, value2 in update_list:
+        #     num.set2(value2)
+
+    def _set3(self):
+        """self has already only 1 possible"""
+        value = self.possible[0]
+        for i in self.no_dupe_rule:
+            i.remove(value)
         for i, has_rule in self.has_rules.items():
-            if value == has_rule[0]: # has_rule satisified
+            if has_rule[0] == value:
                 self.board.has_rule_true(i)
-            else:
-                has_rule.remove(self)
-                if len(has_rule) == 1:
-                    self.board.error()
-                    return
-                if len(has_rule) == 2:
-                    update_list.add((has_rule[1], has_rule[0]))
-        for num, value2 in update_list:
-            num.set2(value2)
+                continue
+            # i don't think it's possible
+            raise ValueError("HI")
