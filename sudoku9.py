@@ -1,6 +1,12 @@
 # idea:
 # the same as sudoku9.py
 # except save no_dupe_rule to number
+# note: no_dupe_rule include self
+# within a has_rule theres many numbers
+# however there are subset of has_rule that is other has_rule
+# the number of different subset mustn't exceed number of numbers -1
+# as a has_rule reduce size, it should update all it's children 
+# and look for new parents
 class Sudoku:
     """The board and rules"""
     def __init__(self, copy=None) -> None:
@@ -14,19 +20,19 @@ class Sudoku:
             self.id = 0 # largest unused id
             self.has_ids = []
             for r in range(9): # add rules to rows
-                for i in range(9):
+                for i in range(1,10):
                     self.add_has_rule(i, zip([r]*9,range(9)))
                 no_dupe = self.flat_board[r*9:r*9+9]
                 for num in no_dupe:
                     num.no_dupe_rule.update(no_dupe)
             for c in range(9): # add rules to columns
-                for i in range(9):
+                for i in range(1,10):
                     self.add_has_rule(i, zip(range(9),[c]*9))
                 no_dupe = self.flat_board[c::9]
                 for num in no_dupe:
                     num.no_dupe_rule.update(no_dupe)
             for block in range(9): # for each block
-                for i in range(9):
+                for i in range(1,10):
                     has_rule = [i]
                     self.has_rules[self.id] = has_rule
                     self.has_ids.append(self.id)
@@ -39,8 +45,6 @@ class Sudoku:
                            for p in range(9)]
                 for num in no_dupe:
                     num.no_dupe_rule.update(no_dupe)
-            for num in self.flat_board:
-                num.no_dupe_rule.remove(num)
         else:
             # make self a deepcopy of copy
             self.init_as_copy(copy)
@@ -60,16 +64,18 @@ class Sudoku:
                     row.append(i)
             self.board.append(row)
         self.flat_board = [self.board[i//9][i%9] for i in range(81)]
-        for i in copy.has_rules:
+        for i in copy.has_rules: # copy has_rules for board
             has_rule = [copy.has_rules[i][0]]
             for j in copy.has_rules[i][1:]:
-                has_rule.append(self.board[j.r][j.c])
+                has_rule.append(self.flat_board[j.pos])
             self.has_rules[i] = has_rule
         for i,num in enumerate(self.flat_board):
-            for j in copy.flat_board[i].has_rules:
+            for j in copy.flat_board[i].has_rules: # copy has_rules for Number
                 num.has_rules[j] = self.has_rules[j]
-            for j in copy.flat_board[i].no_dupe_rule:
+            for j in copy.flat_board[i].no_dupe_rule: # copy no_dupe rules
                 num.no_dupe_rule.add(self.flat_board[j.pos])
+            num.possible = copy.flat_board[i].possible[:]
+        
 
     def set_number(self, pos, value):
         """set pos to value"""
@@ -112,8 +118,9 @@ class Sudoku:
         for i in has_rules[1:]:
             i.has_rules.pop(has_id)
 
-    def error(self):
+    def error(self, message="Error"):
         """an error has occured"""
+        raise ValueError(message)
 
 
 class Number:
@@ -158,10 +165,12 @@ class Number:
 
         if len(self.possible) == 1: # self is determinted
             self._set3()
-
+        return True
 
     def set2(self, value):
         """set self to value"""
+        if value not in self.possible:
+            self.board.error(f"can't set {self.name} to {value}")
         for i in self.possible[:]:
             if i == value:
                 continue
@@ -185,8 +194,11 @@ class Number:
         """self has already only 1 possible"""
         value = self.possible[0]
         for i in self.no_dupe_rule:
+            if i is self:
+                continue
+            i.no_dupe_rule.discard(self)
             i.remove(value)
-        for i, has_rule in self.has_rules.items():
+        for i, has_rule in self.has_rules.copy().items():
             if has_rule[0] == value:
                 self.board.has_rule_true(i)
                 continue
