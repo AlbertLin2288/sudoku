@@ -5,7 +5,7 @@
 # within a has_rule theres many numbers
 # however there are subset of has_rule that is other has_rule
 # the number of different subset mustn't exceed number of numbers -1
-# as a has_rule reduce size, it should update all it's children 
+# as a has_rule reduce size, it should update all it's children
 # and look for new parents
 class Sudoku:
     """The board and rules"""
@@ -158,7 +158,15 @@ class Number:
                 self.board.has_rule_true(i)
                 has_rule[2].set2(has_rule[0])
                 continue
-            
+            for j in self.possible: # update has_rule's child
+                for has_rule2 in has_rule[1][j]:
+                    if self in has_rule2:
+                        has_rule[1][j].remove(has_rule2)
+            parents = set(has_rule[2].has_rules) # update parents
+            for num in has_rule[3:]:
+                parents.intersection_update(num.has_rules)
+            for has_rule2 in parents:
+                has_rule2[1].add(has_rule)
             # futher update group
 
         if len(self.possible) == 1: # self is determinted
