@@ -1,12 +1,19 @@
 # idea:
 # the same as sudoku9.py
 # except save no_dupe_rule to number
+# clarification: there is no longer needs for int in no_dupe_rules
+#                as that can be saved in possible
 # note: no_dupe_rule include self
 # within a has_rule theres many numbers
 # however there are subset of has_rule that is other has_rule
 # the number of different subset mustn't exceed number of numbers -1
 # as a has_rule reduce size, it should update all it's children
 # and look for new parents
+
+# has_rule: [value, {child_value:{children id...}...} Numbers...]
+
+VALUES = (1, 2, 3, 4, 5, 6, 7, 8, 9)
+
 class Sudoku:
     """The board and rules"""
     def __init__(self, copy=None) -> None:
@@ -20,14 +27,16 @@ class Sudoku:
             self.id = 0 # largest unused id
             self.has_ids = []
             for r in range(9): # add rules to rows
-                has_rules = {}
-                for i in range(1,10):
-                    has_rules[self.id] = [i, {}] + self.flat_board[r*9:r*9+9]
+                has_rules = {} # group of same has_rules
+                for i in VALUES: # add rules to group, Numbers done
+                    has_rules[self.id] = \
+                        [i, {j:set() for j in VALUES if j!=i}] +\
+                            self.flat_board[r*9:r*9+9]
                     self.id += 1
                 for i, has_rule in has_rules.items():
-                    self.has_rules[i] = has_rule
+                    self.has_rules[i] = has_rule # add rule to self
                     for j,k in has_rules.items():
-                        has_rule[1][k[0]] = set((j,))
+                        has_rule[1][k[0]].add(j)
                     for num in has_rule[2:]:
                         num.has_rules[i] = has_rule
                 no_dupe = self.flat_board[r*9:r*9+9]
@@ -35,13 +44,15 @@ class Sudoku:
                     num.no_dupe_rule.update(no_dupe)
             for c in range(9): # add rules to columns
                 has_rules = {}
-                for i in range(1,10):
-                    has_rules[self.id] = [i, {}] + self.flat_board[c::9]
+                for i in VALUES:
+                    has_rules[self.id] =\
+                        [i, {j:set() for j in VALUES if j!=i}] +\
+                            self.flat_board[c::9]
                     self.id += 1
                 for i, has_rule in has_rules.items():
                     self.has_rules[i] = has_rule
                     for j,k in has_rules.items():
-                        has_rule[1][k[0]] = set((j,))
+                        has_rule[1][k[0]].add(j)
                     for num in has_rule[2:]:
                         num.has_rules[i] = has_rule
                 no_dupe = self.flat_board[c::9]
@@ -49,8 +60,8 @@ class Sudoku:
                     num.no_dupe_rule.update(no_dupe)
             for block in range(9): # for each block
                 has_rules = {}
-                for i in range(1,10):
-                    has_rule = [i, {}]
+                for i in VALUES:
+                    has_rule = [i, {j:set() for j in VALUES if j!=i}]
                     has_rules[self.id] = has_rule
                     self.has_rules[self.id] = has_rule
                     for p in range(9): # the cord in the flattened block
@@ -60,7 +71,7 @@ class Sudoku:
                     self.id += 1
                 for i, has_rule in has_rules.items():
                     for j,k in has_rules.items():
-                        has_rule[1][k[0]] = set((j,))
+                        has_rule[1][k[0]].add(j)
                 no_dupe = [self.board[block//3*3+p//3][block%3*3+p%3]
                            for p in range(9)]
                 for num in no_dupe:
@@ -144,9 +155,14 @@ class Number:
         if value not in self.possible:
             return False
         self.possible.remove(value)
+        if len(self.possible) == 0:
+            self.board.error(f"removing {str(value)} from {self.name} "+\
+                             "when it's the only possibility.")
+            # don't think this is going to happen
         for i,has_rule in self.has_rules.copy().items():
             if has_rule[0] != value:
                 continue
+            # has_rule without value won't be affected
             has_rule.remove(self)
             self.has_rules.pop(i)
             if len(has_rule) == 2:
@@ -158,15 +174,22 @@ class Number:
                 self.board.has_rule_true(i)
                 has_rule[2].set2(has_rule[0])
                 continue
-            for j in self.possible: # update has_rule's child
-                for has_rule2 in has_rule[1][j]:
-                    if self in has_rule2:
-                        has_rule[1][j].remove(has_rule2)
-            parents = set(has_rule[2].has_rules) # update parents
-            for num in has_rule[3:]:
-                parents.intersection_update(num.has_rules)
-            for has_rule2 in parents:
-                has_rule2[1].add(has_rule)
+            has_rules = self.has_rules.keys()
+            for j in has_rule[1].values(): # update has_rule's child
+                # if removal of self cause a child of has_rule to
+                # no longer be a child, there must be a value in child that
+                # is no longer in has_rule.
+                # the only value removed from has_rule is self
+                # therefore child must include self and isn't removed
+                # since child has different value, that is garunteened
+                # but child, since it include self, must be in self.has_rules
+                for has_rule2_id in has_rule[1][j].intersection(has_rules):
+                    has_rule[1][j].remove(has_rule2_id)
+            parents = set(has_rule[2].has_rules.keys()) # update parents
+            for num in has_rule[3:]: # parents must be in all has_rules number
+                parents.intersection_update(num.has_rules.keys())
+            for has_rule2_id in parents: # add has_rule to parent
+                self.board.has_rules[has_rule2_id][1].add(i)
             # futher update group
 
         if len(self.possible) == 1: # self is determinted
@@ -185,14 +208,19 @@ class Number:
     def _set3(self):
         """self has already only 1 possible"""
         value = self.possible[0]
-        for i in self.no_dupe_rule:
+        for i in self.no_dupe_rule: # handeling those that conflic with self
+            # they no longer need to worry about duping with self
+            # and no longer can be value
             if i is self:
                 continue
             i.no_dupe_rule.discard(self)
             i.remove(value)
         for i, has_rule in self.has_rules.copy().items():
+            # satisifling has_rules
             if has_rule[0] == value:
                 self.board.has_rule_true(i)
                 continue
-            # i don't think it's possible
+            # I don't think it's possible
+            # as has_rules should be removed when possible is reduced
+            # so I'll leave it here for easier discovery of bugs
             raise ValueError("HI")
