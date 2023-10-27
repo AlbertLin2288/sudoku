@@ -41,9 +41,9 @@ class Sudoku:
                             has_rule[1][k[0]].add(j)
                     for num in has_rule[2:]:
                         num.has_rules[i] = has_rule
-                no_dupe = self.flat_board[r*9:r*9+9]
-                for num in no_dupe:
-                    num.no_dupe_rule.update(no_dupe)
+                # no_dupe = self.flat_board[r*9:r*9+9]
+                # for num in no_dupe:
+                #     num.no_dupe_rule.update(no_dupe)
             for c in range(9): # add rules to columns
                 has_rules = {}
                 for i in VALUES:
@@ -58,9 +58,9 @@ class Sudoku:
                             has_rule[1][k[0]].add(j)
                     for num in has_rule[2:]:
                         num.has_rules[i] = has_rule
-                no_dupe = self.flat_board[c::9]
-                for num in no_dupe:
-                    num.no_dupe_rule.update(no_dupe)
+                # no_dupe = self.flat_board[c::9]
+                # for num in no_dupe:
+                #     num.no_dupe_rule.update(no_dupe)
             for block in range(9): # for each block
                 has_rules = {}
                 for i in VALUES:
@@ -76,10 +76,10 @@ class Sudoku:
                     for j,k in has_rules.items():
                         if k[0] != has_rule[0]:
                             has_rule[1][k[0]].add(j)
-                no_dupe = [self.board[block//3*3+p//3][block%3*3+p%3]
-                           for p in range(9)]
-                for num in no_dupe:
-                    num.no_dupe_rule.update(no_dupe)
+                # no_dupe = [self.board[block//3*3+p//3][block%3*3+p%3]
+                #            for p in range(9)]
+                # for num in no_dupe:
+                #     num.no_dupe_rule.update(no_dupe)
         else:
             # make self a deepcopy of copy
             self.init_as_copy(copy)
@@ -93,12 +93,9 @@ class Sudoku:
         for r in range(9):
             row = []
             for c,i in enumerate(copy.board[r]):
-                if isinstance(i, Number):
-                    num = Number(self, r, c)
-                    num.isset = i.isset
-                    row.append(num)
-                else:
-                    row.append(i)
+                num = Number(self, r, c)
+                num.isset = i.isset
+                row.append(num)
             self.board.append(row)
         self.flat_board = [self.board[i//9][i%9] for i in range(81)]
         for i in copy.has_rules: # copy has_rules for board
@@ -111,8 +108,8 @@ class Sudoku:
         for i,num in enumerate(self.flat_board):
             for j in copy.flat_board[i].has_rules: # copy has_rules for Number
                 num.has_rules[j] = self.has_rules[j]
-            for j in copy.flat_board[i].no_dupe_rule: # copy no_dupe rules
-                num.no_dupe_rule.add(self.flat_board[j.pos])
+            # for j in copy.flat_board[i].no_dupe_rule: # copy no_dupe rules
+            #     num.no_dupe_rule.add(self.flat_board[j.pos])
             num.possible = copy.flat_board[i].possible[:]
 
     def set_number(self, pos, value):
@@ -131,7 +128,7 @@ class Sudoku:
 
     def has_rule_true(self, has_id):
         """has_rule is satisifled, so delete it"""
-        if has_id in self.has_rules.keys():
+        if has_id in self.has_rules:
             has_rules = self.has_rules.pop(has_id)
             for i in has_rules[2:]:
                 i.has_rules.pop(has_id)
@@ -150,14 +147,19 @@ class Number:
         # unused
         self.name = "ABCDEFGHI"[r]+"abcdefghi"[c]
         self.has_rules = {}
-        self.no_dupe_rule = set() # only Number now
+        # self.no_dupe_rule = set() # only Number now
         self.possible = [1,2,3,4,5,6,7,8,9]
         self.isset = False
 
     def set(self, value):
         """replace self with int"""
         # to do: replace self with int
-        self.set2(value)
+        if self.isset:
+            if self.possible[0] != value:
+                self.board.error(f"Can't set {self.name} to {value},"+\
+                                 f" it's already set to {self.possible[0]}")
+        else:
+            self.set2(value)
 
     def remove(self, value):
         """remove value as a possibility
@@ -175,7 +177,7 @@ class Number:
                 continue
             # has_rule without value won't be affected
             has_rule.remove(self)
-            if i in self.has_rules.keys():
+            if i in self.has_rules:
                 self.has_rules.pop(i)
             if len(has_rule) == 2:
                 self.board.error(f"Removing {str(value)} from " +\
@@ -233,13 +235,13 @@ class Number:
         self.isset = True
         # print(f"{self.name} is set")
         value = self.possible[0]
-        for i in self.no_dupe_rule.copy(): # handeling those that conflic with self
-            # they no longer need to worry about duping with self
-            # and no longer can be value
-            if i is self:
-                continue
-            i.no_dupe_rule.discard(self)
-            i.remove(value)
+        # for i in self.no_dupe_rule.copy(): # handeling those that conflic with self
+        #     # they no longer need to worry about duping with self
+        #     # and no longer can be value
+        #     if i is self:
+        #         continue
+        #     i.no_dupe_rule.discard(self)
+        #     i.remove(value)
         for i, has_rule in self.has_rules.copy().items():
             # satisifling has_rules
             if has_rule[0] == value:
