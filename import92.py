@@ -24,7 +24,7 @@ class Sudoku(sudoku92.Sudoku):
 if __name__ == "__main__":
     t1 = time()
     s1 = Sudoku()
-    interface = False
+    interface = True
 ##    IN_LIST = ["Aa1","Ab2","Ac3","Bd1","Be2","Bf3"]
 ##    for i in IN_LIST:
 ##        s2 = Sudoku(s1)
@@ -34,8 +34,9 @@ if __name__ == "__main__":
 ##    s2 = Sudoku(s1)
 ##    s2.input("Cg4")
     TEST1 = False
-    TEST2 = True
-    TEST3 = True
+    TEST2 = False
+    TEST3 = False
+    TEST4 = True
 
     if TEST1:
         move = input()
@@ -83,7 +84,24 @@ if __name__ == "__main__":
                 for c in range(9):
                     print(s1.board[r][c].possible[0],end="")
                 print()
-    print(f"\n\nTime taken: {time()-t1}\n")
+        print(f"\n\nTime taken: {time()-t1}\n")
+
+    if TEST4:
+        g1 = sudoku92.Game()
+        with open("test1.txt", encoding="UTF-8") as file:
+            board1l = file.readlines()
+            board1 = []
+            for i in board1l:
+                if i[0] != "#":
+                    board1.append(i[:-1])
+        for r,row in enumerate(board1[:9]):
+            for c, n in enumerate(row[:9]):
+                if n in "123456789":
+                    test = g1.set2((r,c),int(n))
+                    if not test:
+                        raise ValueError("Sudoku has a useless input")
+                    g1.set1((r,c),int(n))
+        
     
     if interface:
         cmd = input(">>>")

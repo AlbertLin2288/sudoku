@@ -127,6 +127,32 @@ class Sudoku:
     def error(self, message="Error"):
         """an error has occured"""
         raise ValueError(message)
+    
+    def __eq__(self, value) -> bool:
+        if isinstance(value, Sudoku):
+            if any((not i.eq(j)
+                     for i,j in zip(self.flat_board,value.flat_board))):
+                return False
+            if len(self.has_rules) != len(value.has_rules):
+                return False
+            hr1 = list(self.has_rules.values())
+            hr2 = list(value.has_rules.values())
+            for i in hr1:
+                for j in hr2:
+                    if i[0] == j[0] and len(i) == len(j) and\
+                        all((hr1[k].pos == hr2[k].pos for k in range(len(i)-2))):
+                        break
+                else:
+                    return False
+            for i in hr2:
+                for j in hr1:
+                    if i[0] == j[0] and len(i) == len(j) and\
+                        all((hr1[k].pos == hr2[k].pos for k in range(len(i)-2))):
+                        break
+                else:
+                    return False
+            return True
+        return False
 
 
 class Number:
@@ -242,6 +268,13 @@ class Number:
             # as has_rules should be removed when possible is reduced
             # so I'll leave it here for easier discovery of bugs
             raise ValueError("HI")
+    
+    def eq(self, value) -> bool:
+        if isinstance(value, Number):
+            if self.possible != value.possible:
+                return False
+            return True
+        return False
 
 
 class Game:
@@ -320,8 +353,14 @@ def look_for_dif(s1, s2):
             for j in s1.flat_board[i].possible:
                 s3 = Sudoku(s1)
                 s4 = Sudoku(s2)
-                s3.set_number(i,j)
-                s4.set_number(i,j)
+                try:
+                    s3.set_number(i,j)
+                    try:
+                        s4.set_number(i,j)
+                    except ValueError:
+                        return True
+                except ValueError:
+                    continue
                 dif = look_for_dif(s3, s4)
                 if dif:
                     return True
