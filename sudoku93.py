@@ -1,8 +1,10 @@
 """The 9th attmpt in this"""
-# to test if it works
+# pause testing
+# restructure calculating step
+# check error after done
 import random
 P = 0.2
-# has_rule: [value, {child_value:{children id...}...} Numbers...]
+# has_rule: [value, {child_value:{children id...}...}, Numbers...]
 
 VALUES = (1, 2, 3, 4, 5, 6, 7, 8, 9)
 
@@ -129,7 +131,7 @@ class Sudoku:
     def error(self, message="Error"):
         """an error has occured"""
         raise ValueError(message)
-    
+
     def __eq__(self, value) -> bool:
         if isinstance(value, Sudoku):
             if any((not i.eq(j)
@@ -156,6 +158,23 @@ class Sudoku:
             return True
         return False
 
+    def update(self):
+        """Check if everything is still ok"""
+        to_set = []
+        for i, has_rule in self.has_rules.items():
+            if len(has_rule) == 2:
+                self.error(f"has_rule {i} failed")
+            elif len(has_rule) == 3:
+                to_set.append(has_rule)
+        for i in to_set:
+            i[2].set2(i[0])
+        for i in self.flat_board:
+            if not i.isset:
+                if len(i.possible) == 0:
+                    self.error(f"{i.name} is impossible")
+                elif len(i.possible) == 1:
+                    i.set3()
+                    break
 
 class Number:
     """The number"""
@@ -179,6 +198,7 @@ class Number:
                                  f" it's already set to {self.possible[0]}")
         else:
             self.set2(value)
+            self.board.update()
 
     def remove(self, value):
         """remove value as a possibility
@@ -204,43 +224,43 @@ class Number:
                                  f"{self.name} cause " +\
                                  f"has_rule {i} to has fail.")
                 continue
-            if len(has_rule) == 3:
-                self.board.has_rule_true(i)
-                has_rule[2].set2(has_rule[0])
-                continue
-            has_rules = self.has_rules.keys()
-            for j in has_rule[1].copy().keys(): # update has_rule's child
-                # if removal of self cause a child of has_rule to
-                # no longer be a child, there must be a value in child that
-                # is no longer in has_rule.
-                # the only value removed from has_rule is self
-                # therefore child must include self and isn't removed
-                # since child has different value, that is garunteened
-                # but child, since it include self, must be in self.has_rules
-                for has_rule2_id in has_rule[1][j].intersection(has_rules):
-                    has_rule[1][j].discard(has_rule2_id)
-                if len(has_rule[1][j]) == 0: # no longer has child has_rule j
-                    has_rule[1].pop(j)
-            parents = set(has_rule[2].has_rules.keys()) # update parents
-            for num in has_rule[3:]: # parents must be in all has_rules number
-                parents.intersection_update(num.has_rules.keys())
-            for has_rule2_id in parents: # add has_rule to parent
-                if has_rule2_id == i:# the parent happen to be itself
-                    continue
-                if has_rule[0] in self.board.has_rules[has_rule2_id][1]:
-                    self.board.has_rules[has_rule2_id][1][has_rule[0]].add(i)
-                elif has_rule[0] == self.board.has_rules[has_rule2_id][0]:
-                    self.board.has_rule_true(has_rule2_id)
-                else:
-                    self.board.has_rules[has_rule2_id][1][has_rule[0]] = {i}
-            # check if number of child values exceed number of Number
-            if len(has_rule[1]) > len(has_rule) - 2:
-                self.board.error(f"More children of rule {i} than its Number"+\
-                                 f" when {value} is removed from {self.name}")
+            # if len(has_rule) == 3:
+            #     self.board.has_rule_true(i)
+            #     has_rule[2].set2(has_rule[0])
+            #     continue
+            # has_rules = self.has_rules.keys()
+            # for j in has_rule[1].copy().keys(): # update has_rule's child
+            #     # if removal of self cause a child of has_rule to
+            #     # no longer be a child, there must be a value in child that
+            #     # is no longer in has_rule.
+            #     # the only value removed from has_rule is self
+            #     # therefore child must include self and isn't removed
+            #     # since child has different value, that is garunteened
+            #     # but child, since it include self, must be in self.has_rules
+            #     for has_rule2_id in has_rule[1][j].intersection(has_rules):
+            #         has_rule[1][j].discard(has_rule2_id)
+            #     if len(has_rule[1][j]) == 0: # no longer has child has_rule j
+            #         has_rule[1].pop(j)
+            # parents = set(has_rule[2].has_rules.keys()) # update parents
+            # for num in has_rule[3:]: # parents must be in all has_rules number
+            #     parents.intersection_update(num.has_rules.keys())
+            # for has_rule2_id in parents: # add has_rule to parent
+            #     if has_rule2_id == i:# the parent happen to be itself
+            #         continue
+            #     if has_rule[0] in self.board.has_rules[has_rule2_id][1]:
+            #         self.board.has_rules[has_rule2_id][1][has_rule[0]].add(i)
+            #     elif has_rule[0] == self.board.has_rules[has_rule2_id][0]:
+            #         self.board.has_rule_true(has_rule2_id)
+            #     else:
+            #         self.board.has_rules[has_rule2_id][1][has_rule[0]] = {i}
+            # # check if number of child values exceed number of Number
+            # if len(has_rule[1]) > len(has_rule) - 2:
+            #     self.board.error(f"More children of rule {i} than its Number"+\
+            #                      f" when {value} is removed from {self.name}")
             # futher update rule
 
-        if len(self.possible) == 1: # self is determinted
-            self._set3()
+        # if len(self.possible) == 1: # self is determinted
+        #     self.set3()
         return True
 
     def set2(self, value):
@@ -252,7 +272,7 @@ class Number:
                 continue
             self.remove(i)
 
-    def _set3(self):
+    def set3(self):
         """self has already only 1 possible"""
         self.isset = True
         # print(f"{self.name} is set")
@@ -274,6 +294,7 @@ class Number:
             # as has_rules should be removed when possible is reduced
             # so I'll leave it here for easier discovery of bugs
             raise ValueError("HI")
+        self.board.update()
     
     def eq(self, value) -> bool:
         if isinstance(value, Number):
@@ -297,7 +318,7 @@ class Game:
     def check1(self):
         """check if isset is always interexchangable to no other solution
         isset => 1 solve(easier) <==> more solve => not isset: True as 
-            isset is only True from _set3, from set2, when len(possible)==1
+            isset is only True from set3, from set2, when len(possible)==1
         1 solve => isset <==> not isset => more solve(easier)"""
         for i in range(81):# do check2 first
             if not self.s1.flat_board[i].isset:

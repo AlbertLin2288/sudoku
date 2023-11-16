@@ -1,9 +1,9 @@
 """add more function for testing"""
 
-import sudoku92
+import sudoku93
 from time import time
 
-class Sudoku(sudoku92.Sudoku):
+class Sudoku(sudoku93.Sudoku):
     def __str__(self):
         board = ""
         board2 = ""
@@ -35,10 +35,14 @@ if __name__ == "__main__":
 ##    s2 = Sudoku(s1)
 ##    s2.input("Cg4")
     TEST1 = False
-    TEST2 = True
-    TEST3 = True
+    # input moves and make them
+    TEST2 = False
+    # read sudoku question from file
+    TEST3 = False
+    # solve test2
     TEST4 = False
-    TEST5 = False
+    # test if all number in file is useful
+    TEST5 = True
     TEST6 = False
 
     if TEST1:
@@ -89,7 +93,7 @@ if __name__ == "__main__":
         print(f"\n\nTime taken: {time()-t1}\n")
 
     if TEST4:
-        g1 = sudoku92.Game()
+        g1 = sudoku93.Game()
         with open("test1.txt", encoding="UTF-8") as file:
             board1l = file.readlines()
             board1 = []
@@ -105,17 +109,17 @@ if __name__ == "__main__":
                     g1.set1((r,c),int(n))
 
     if TEST5:
-        s1 = sudoku92.Sudoku()
-        success = sudoku92.check2(s1)
+        s1 = sudoku93.Sudoku()
+        success = sudoku93.check2(s1)
         if success[0]:
             print("Yay")
         else:
             print(success[1])
             s1 = success[2]
             # raise ValueError("Sudoku possible isn't possible")
-    
+
     if TEST6:
-        g1 = sudoku92.Game()
+        g1 = sudoku93.Game()
         with open("test1.txt", encoding="UTF-8") as file:
             board1l = file.readlines()
             board1 = []
