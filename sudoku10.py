@@ -45,3 +45,35 @@
 #                                        it's for blocks)
 # And with them we can easily create X
 #
+#
+#
+#
+# From Wikipedia: Knuth's Algorithm X
+# # If the matrix A has no columns,
+# the current partial solution is a valid solution; terminate successfully.
+#       1. Otherwise choose a column c (deterministically).
+#       2. Choose a row r such that Ar, c = 1 (nondeterministically).
+#       3. Include row r in the partial solution.
+#       4. For each column j such that Ar, j = 1,
+#           for each row i such that Ai, j = 1,
+#               delete row i from matrix A.
+#           delete column j from matrix A.
+#       5. Repeat this algorithm recursively on the reduced matrix A.
+#
+# This require we express it in matrix form, which I won't explain, because
+# I believe I've memorized it.
+#
+#
+# Acturally, if you think about it, it's not very different than brute
+# force. It's adviced to choose the column with the least 1s, similar to
+# chossing a grid in sudoku with least possiblity.
+#
+# https://en.wikipedia.org/wiki/Dancing_Links
+# This will be inplemented in a c++ version (If I can learn it in a month,
+# since it is much faster, shouldn't be hard)
+# The data will be in a matrix, with header tracking the number of 1s
+# (as the matrix is going to be very sparse, with only 1/9 1s), and every
+# row and column(including header) will form a doubly-linked list.
+# Wikipedia doesn't metion any row-choosing method, so I'll have to make
+# a python program to test it, and if there is a better method, may add
+# column header
