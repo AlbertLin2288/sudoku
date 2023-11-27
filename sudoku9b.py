@@ -4,7 +4,8 @@
 # check error after done
 import random
 P = 0.2
-# has_rule: [value, {child_value:{children id...}...}, Numbers...]
+# has_rule: [value, {child_value:{children id...}...}, [removed numbers], Numbers...]
+# need to update no dupe rule
 
 VALUES = (1, 2, 3, 4, 5, 6, 7, 8, 9)
 
@@ -24,7 +25,7 @@ class Sudoku:
                 has_rules = {} # group of same has_rules
                 for i in VALUES: # add rules to group, Numbers done
                     has_rules[self.id] = \
-                        [i, {j:set() for j in VALUES if j!=i}] +\
+                        [i, {j:set() for j in VALUES if j!=i}, []] +\
                             self.flat_board[r*9:r*9+9]
                     self.id += 1
                 for i, has_rule in has_rules.items():
@@ -32,7 +33,7 @@ class Sudoku:
                     for j,k in has_rules.items():
                         if k[0] != has_rule[0]:
                             has_rule[1][k[0]].add(j)
-                    for num in has_rule[2:]:
+                    for num in has_rule[3:]:
                         num.has_rules[i] = has_rule
                 no_dupe = self.flat_board[r*9:r*9+9]
                 for num in no_dupe:
@@ -41,7 +42,7 @@ class Sudoku:
                 has_rules = {}
                 for i in VALUES:
                     has_rules[self.id] =\
-                        [i, {j:set() for j in VALUES if j!=i}] +\
+                        [i, {j:set() for j in VALUES if j!=i}, []] +\
                             self.flat_board[c::9]
                     self.id += 1
                 for i, has_rule in has_rules.items():
@@ -49,7 +50,7 @@ class Sudoku:
                     for j,k in has_rules.items():
                         if k[0] != has_rule[0]:
                             has_rule[1][k[0]].add(j)
-                    for num in has_rule[2:]:
+                    for num in has_rule[3:]:
                         num.has_rules[i] = has_rule
                 no_dupe = self.flat_board[c::9]
                 for num in no_dupe:
@@ -57,7 +58,7 @@ class Sudoku:
             for block in range(9): # for each block
                 has_rules = {}
                 for i in VALUES:
-                    has_rule = [i, {j:set() for j in VALUES if j!=i}]
+                    has_rule = [i, {j:set() for j in VALUES if j!=i}, []]
                     has_rules[self.id] = has_rule
                     self.has_rules[self.id] = has_rule
                     for p in range(9): # the cord in the flattened block
@@ -95,7 +96,8 @@ class Sudoku:
             has_rule = [copy.has_rules[i][0]]
             children = {j:k.copy() for j,k in copy.has_rules[i][1].items()}
             has_rule.append(children)
-            for j in copy.has_rules[i][2:]:
+            has_rule.append([])
+            for j in copy.has_rules[i][3:]:
                 has_rule.append(self.flat_board[j.pos])
             self.has_rules[i] = has_rule
         for i,num in enumerate(self.flat_board):
@@ -125,7 +127,7 @@ class Sudoku:
             if has_id == 90:
                 pass
             has_rules = self.has_rules.pop(has_id)
-            for i in has_rules[2:]:
+            for i in has_rules[3:]:
                 i.has_rules.pop(has_id)
 
     def error(self, message="Error"):
@@ -144,30 +146,67 @@ class Sudoku:
             for i in hr1:
                 for j in hr2:
                     if i[0] == j[0] and len(i) == len(j) and\
-                        all((hr1[k].pos == hr2[k].pos for k in range(len(i)-2))):
+                        all((hr1[k].pos == hr2[k].pos for k in range(3,len(i)))):
                         break
                 else:
                     return False
             for i in hr2:
                 for j in hr1:
                     if i[0] == j[0] and len(i) == len(j) and\
-                        all((hr1[k].pos == hr2[k].pos for k in range(len(i)-2))):
+                        all((hr1[k].pos == hr2[k].pos for k in range(3,len(i)))):
                         break
                 else:
                     return False
             return True
         return False
 
-    def update(self):
+    def update1(self):
         """Check if everything is still ok"""
         to_set = []
         for i, has_rule in self.has_rules.items():
-            if len(has_rule) == 2:
+            if len(has_rule) == 3:
                 self.error(f"has_rule {i} failed")
-            elif len(has_rule) == 3:
+            elif len(has_rule) == 4:
                 to_set.append(has_rule)
+            has_rule[1] = {}
+        for i,has_rule in self.has_rules.items():
+            v = has_rule[0]
+            parents = set()
+            for num in has_rule[3:]:
+                parents.intersection_update(num.has_rules.keys())
+            for p in parents:
+                if v in p[1]:
+                    p[1][v].add(i)
+                else:
+                    p[1][v] = {i}
+            has_rule[2] = []
+            has_rule.append(parents)
+            has_rule.append([])
+        for i,has_rule in self.has_rules.items():
+            freedom = len(has_rule) - 3 - len(has_rule[1])
+            has_rule.append(freedom)
+        for i,has_rule in self.has_rules.items():
+            if has_rule[-1] <= 0:
+                self.error(f"More children of rule {str(i)} then its number")
+            elif has_rule[-1] == 1:
+                for p in has_rule[-3]:
+                    if len(p)>len(self):
+                        p[-2].append(i)
+        for i, has_rule in self.has_rules.items():
+            for has_id in has_rule[-2]:
+                has_rule2 = self.has_rules[has_id]
+                has_rule[1][has_rule2[0]].remove(has_id)
+                if len(has_rule[1][has_rule2[0]]) == 0:
+                    has_rule[1].pop(has_rule2[0])
+                for num in has_rule2[3:-3]:
+                    if num in has_rule:
+                        has_rule.remove(num)
+        for i, has_rule in self.has_rules.items():
+            has_rule.pop()
+            has_rule.pop()
+            has_rule.pop()
         for i in to_set:
-            i[2].set2(i[0])
+            i[3].set2(i[0])
         for i in self.flat_board:
             if not i.isset:
                 if len(i.possible) == 0:
@@ -198,7 +237,7 @@ class Number:
                                  f" it's already set to {self.possible[0]}")
         else:
             self.set2(value)
-            self.board.update()
+            self.board.update1()
 
     def remove(self, value):
         """remove value as a possibility
@@ -216,10 +255,11 @@ class Number:
                 continue
             # has_rule without value won't be affected
             has_rule.remove(self)
+            has_rule[2].append(self)
             self.has_rules.pop(i)
             if i in self.has_rules:
                 self.has_rules.pop(i)
-            if len(has_rule) == 2:
+            if len(has_rule) == 3:
                 self.board.error(f"Removing {str(value)} from " +\
                                  f"{self.name} cause " +\
                                  f"has_rule {i} to has fail.")
@@ -294,8 +334,8 @@ class Number:
             # as has_rules should be removed when possible is reduced
             # so I'll leave it here for easier discovery of bugs
             raise ValueError("HI")
-        self.board.update()
-    
+        self.board.update1()
+
     def eq(self, value) -> bool:
         if isinstance(value, Number):
             if self.possible != value.possible:
