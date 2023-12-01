@@ -81,7 +81,7 @@
 # Wikipedia doesn't metion any row-choosing method, so I'll have to make
 # a python program to test it, and if there is a better method, may add
 # column header
-#
+# edit: doesn't matter, as all rows have 4 1s
 #
 #
 # First test how fast it is at finding solution
@@ -93,35 +93,69 @@ P = re.compile("[1-9 ]{9}")
 
 def cal_col(num):
     """calculate which rules num is in"""
-    rn, cn, nn = num
+    rn = num//81
+    cn = num//9%9
+    nn = num%9
     r1 = rn*9 + cn
-    r2 = rn*9 + nn-1 + 81
-    r3 = cn*9 + nn-1 + 162
-    r4 = rn//3*27 + cn//3*9 + nn-1 + 243
+    r2 = rn*9 + nn + 81
+    r3 = cn*9 + nn + 162
+    r4 = rn//3*27 + cn//3*9 + nn + 243
     return r1,r2,r3,r4
 
 def cal_row(col):
     """calculate which numbers rule col include"""
     if col<81:
-        rn = col//9
-        cn = col%9
-        return ((rn,cn,nn) for nn in range(1,9))
+        return (col*9+i for i in range(1,9))
     col -= 81
     if col<81:
-        rn = col//9
-        nn = col%9 + 1
-        return ((rn, cn, nn) for cn in range(9))
+        con = col//9*81 + col%9
+        return (con+i*9 for i in range(9))
     col -= 81
     if col<81:
-        cn = col//9
-        nn = col%9 + 1
-        return ((rn, cn, nn) for rn in range(9))
+        return (col+81*i for i in range(9))
     col -= 81
-    rn = col//27
-    cn = col//9%3
-    nn = col%9 + 1
-    return ((rn+i//3,cn+i%3,nn) for i in range(9))
+    con = col//27*243+col//9%3*27+col%9
+    return (con+i//3*81+i%3*9 for i in range(9))
 
+def solve(rrows, rcolumns, col_head, sboard, row=None):
+    """solve it"""
+    if len(rcolumns) == 0:
+        return True
+    if row is not None:
+        pc = set()
+        pr = set()
+        sboard.append(row)
+        for c1 in cal_col(row):
+            if c1 in rcolumns:
+                for r1 in cal_row(c1):
+                    if r1 in rrows:
+                        rrows.remove(r1)
+                        pr.add(r1)
+                        for c2 in cal_col(r1):
+                            col_head[c2] -= 1
+                rcolumns.remove(c1)
+                pc.add(c1)
+    mc = min(rcolumns, key=lambda c:col_head[c])
+    if col_head[mc] != 0:
+        col = mc
+        for r1 in cal_row(col):
+            if r1 in rrows:
+                result = solve(rrows, rcolumns,col_head, sboard, r1)
+                if result:
+                    return True
+    if row is not None:
+        sboard.pop()
+        for c1 in pc:
+            rcolumns.add(c1)
+        for r1 in pr:
+            rrows.add(r1)
+            for c2 in cal_col(r1):
+                col_head[c2] += 1
+    return False
+
+# test
+cal_row(254)
+#
 
 # read board from file
 board = []
@@ -133,7 +167,7 @@ with open("test2.txt", "r", encoding="utf-8") as file:
             b = m.group()
             for c,j in enumerate(b):
                 if j!=" ":
-                    board.append((r,c,int(j)))
+                    board.append(r*81+c*9+int(j)-1)
             r += 1
             if r == 9:
                 break
@@ -142,21 +176,29 @@ with open("test2.txt", "r", encoding="utf-8") as file:
 
 
 t1 = time()
-m = []
-b1 = [(r,c,n) for r in range(9) for c in range(9) for n in range(1,10)]
 # rule: change number before column before row
 
-# create board
-# we don't need a real one
-# for n in b1:
-#     mn = [False for i in range(324)]
-#     for r in cal_col(n):
-#         mn[r] = True
-#     m.append(mn)
-# m = zip(*m)
-
 # first, remove those already set.
+rows = set(range(729))
+columns = set(range(324))
+columns_head = [9 for i in range(324)]
 for n in board:
-    i = b1.index(n)
-    mi = [j for j,k in enumerate(m) if k[i]]
-    remove = set()
+    rc = cal_col(n)
+    for c in rc:
+        if c in columns:
+            columns.remove(c)
+            for r in cal_row(c):
+                if r in rows:
+                    rows.remove(r)
+                    if r==11:
+                        pass
+                    for c3 in cal_col(r):
+                        columns_head[c3] -= 1
+                        if c3 in columns and columns_head[c3] == 0:
+                            pass
+                        if c3==245:
+                            pass
+# now solve it
+solve(rows, columns, columns_head, board)
+print(time() - t1)
+print(board)
