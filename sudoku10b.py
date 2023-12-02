@@ -88,14 +88,14 @@
 import re
 # import numpy as np
 from time import time
-P = re.compile("[1-9 ]{9}")
+P = re.compile("start(\n[1-9 ]{9}){9}")
 
 
-def cal_col(num):
+def cal_col(row_num):
     """calculate which rules num is in"""
-    rn = num//81
-    cn = num//9%9
-    nn = num%9
+    rn = row_num//81
+    cn = row_num//9%9
+    nn = row_num%9
     r1 = rn*9 + cn
     r2 = rn*9 + nn + 81
     r3 = cn*9 + nn + 162
@@ -105,7 +105,7 @@ def cal_col(num):
 def cal_row(col):
     """calculate which numbers rule col include"""
     if col<81:
-        return (col*9+i for i in range(1,9))
+        return (col*9+i for i in range(9))
     col -= 81
     if col<81:
         con = col//9*81 + col%9
@@ -117,7 +117,10 @@ def cal_row(col):
     con = col//27*243+col//9%3*27+col%9
     return (con+i//3*81+i%3*9 for i in range(9))
 
-def solve(rrows, rcolumns, col_head, sboard, row=None):
+def get_num(row_num):
+    return row_num//81, row_num//9%9, row_num%9
+
+def solve(rrows, rcolumns, col_head, sboard, row=None, n=0):
     """solve it"""
     if len(rcolumns) == 0:
         return True
@@ -133,14 +136,18 @@ def solve(rrows, rcolumns, col_head, sboard, row=None):
                         pr.add(r1)
                         for c2 in cal_col(r1):
                             col_head[c2] -= 1
+                            if c2 == 18:
+                                pass
                 rcolumns.remove(c1)
                 pc.add(c1)
+    if len(rcolumns) == 0:
+        return True
     mc = min(rcolumns, key=lambda c:col_head[c])
     if col_head[mc] != 0:
         col = mc
         for r1 in cal_row(col):
             if r1 in rrows:
-                result = solve(rrows, rcolumns,col_head, sboard, r1)
+                result = solve(rrows, rcolumns,col_head, sboard, r1, n+1)
                 if result:
                     return True
     if row is not None:
@@ -153,19 +160,18 @@ def solve(rrows, rcolumns, col_head, sboard, row=None):
                 col_head[c2] += 1
     return False
 
-# test
-cal_row(254)
-#
+
 
 # read board from file
 board = []
 r=0
 with open("test2.txt", "r", encoding="utf-8") as file:
-    for l in file.readlines():
-        m = re.match(P, l)
-        if m is not None:
-            b = m.group()
-            for c,j in enumerate(b):
+    text = file.read()
+    m = re.search(P, text)
+    if m is not None:
+        b = m.group()[5:]
+        for i in range(9):
+            for c,j in enumerate(b[10*i+1:10*i+10]):
                 if j!=" ":
                     board.append(r*81+c*9+int(j)-1)
             r += 1
@@ -182,8 +188,8 @@ t1 = time()
 rows = set(range(729))
 columns = set(range(324))
 columns_head = [9 for i in range(324)]
-for n in board:
-    rc = cal_col(n)
+for nu in board:
+    rc = cal_col(nu)
     for c in rc:
         if c in columns:
             columns.remove(c)
@@ -199,6 +205,13 @@ for n in board:
                         if c3==245:
                             pass
 # now solve it
-solve(rows, columns, columns_head, board)
+s = solve(rows, columns, columns_head, board)
+print(s)
 print(time() - t1)
 print(board)
+board2 = [["0" for i in range(9)] for j in range(9)]
+for i in board:
+    r, c, nu = get_num(i)
+    nu = nu+1
+    board2[r][c] = str(nu)
+print("\n".join(("".join(i) for i in board2)))
