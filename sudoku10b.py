@@ -118,9 +118,10 @@ def cal_row(col):
     return (con+i//3*81+i%3*9 for i in range(9))
 
 def get_num(row_num):
+    """return the location and value of the cell correspond to row row_num"""
     return row_num//81, row_num//9%9, row_num%9
 
-def solve(rrows, rcolumns, col_head, sboard, row=None, n=0):
+def solve(rrows, rcolumns, col_head, sboard, row=None):
     """solve it"""
     if len(rcolumns) == 0:
         return True
@@ -136,8 +137,8 @@ def solve(rrows, rcolumns, col_head, sboard, row=None, n=0):
                         pr.add(r1)
                         for c2 in cal_col(r1):
                             col_head[c2] -= 1
-                            if c2 == 18:
-                                pass
+                            # if c2 == 18:
+                            #     pass
                 rcolumns.remove(c1)
                 pc.add(c1)
     if len(rcolumns) == 0:
@@ -147,7 +148,7 @@ def solve(rrows, rcolumns, col_head, sboard, row=None, n=0):
         col = mc
         for r1 in cal_row(col):
             if r1 in rrows:
-                result = solve(rrows, rcolumns,col_head, sboard, r1, n+1)
+                result = solve(rrows, rcolumns,col_head, sboard, r1)
                 if result:
                     return True
     if row is not None:
@@ -164,19 +165,15 @@ def solve(rrows, rcolumns, col_head, sboard, row=None, n=0):
 
 # read board from file
 board = []
-r=0
 with open("test2.txt", "r", encoding="utf-8") as file:
     text = file.read()
     m = re.search(P, text)
     if m is not None:
         b = m.group()[5:]
-        for i in range(9):
-            for c,j in enumerate(b[10*i+1:10*i+10]):
+        for r in range(9):
+            for c,j in enumerate(b[10*r+1:10*r+10]):
                 if j!=" ":
                     board.append(r*81+c*9+int(j)-1)
-            r += 1
-            if r == 9:
-                break
 # print(board)
 
 
@@ -196,17 +193,16 @@ for nu in board:
             for r in cal_row(c):
                 if r in rows:
                     rows.remove(r)
-                    if r==11:
-                        pass
+                    # if r==11:
+                    #     pass
                     for c3 in cal_col(r):
                         columns_head[c3] -= 1
-                        if c3 in columns and columns_head[c3] == 0:
-                            pass
-                        if c3==245:
-                            pass
+                        # if c3 in columns and columns_head[c3] == 0:
+                        #     pass
+                        # if c3==245:
+                        #     pass
 # now solve it
-s = solve(rows, columns, columns_head, board)
-print(s)
+print(solve(rows, columns, columns_head, board))
 print(time() - t1)
 print(board)
 board2 = [["0" for i in range(9)] for j in range(9)]
@@ -215,3 +211,4 @@ for i in board:
     nu = nu+1
     board2[r][c] = str(nu)
 print("\n".join(("".join(i) for i in board2)))
+print(f"Overall time: {time()-t1}s")
