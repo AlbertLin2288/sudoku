@@ -61,3 +61,26 @@
 # solutions.
 # Second, check if the technic can be used even when only tree is known,
 # if it work: Third: Try reducing the completeness of the tree needed.
+#
+# First:
+# Attampt 1:
+# If we know all the possible solutions emerging from current board,
+# what the players will do is set value for certain spot which remove
+# certain possiblity. Assuming both players have the info, the winning
+# step would be allowing only one possibility to remain,so the previous
+# board would have one soution that has a spot different than all other.
+# Assuming the previous move was the best possible, then we can know that
+# there wasn't any way to win, and all move will present an oppotunity for
+# the other player.
+#
+# Attampt 2:
+# Imagine a bipartite graph with one set of vertex U denoting all
+# possible solution, and the other set V representing all possible
+# position and value to be filled in(e.g. Aa1, Bd3). A edge connect
+# two vertex if the position and the value is valid in the solution.
+# What the players take turns to do is to choose a vertex v in V, and
+# remove all vertex in U that are not connected to v. To win, a player
+# shall remove v and cause only one element to remain in U.(This remind
+# me of reading about nim(Game theory) in wikipedia) The next player win
+# after there exist a vertex v such that there is only one u connected to
+# it.
