@@ -42,6 +42,7 @@ def solven(rrows, rcolumns, col_head, sboard, row=None, n=1):
         print("Hi1") # shouldn't be called
         return 0
     if len(rcolumns) == 0:
+        print("Hi2")
         return n-1
     if row is not None:
         pc = set()
@@ -57,17 +58,21 @@ def solven(rrows, rcolumns, col_head, sboard, row=None, n=1):
                             col_head[c2] -= 1
                 rcolumns.remove(c1)
                 pc.add(c1)
-
     if len(rcolumns) == 0:
-        return n-1
-    mc = min(rcolumns, key=lambda c:col_head[c])
-    if col_head[mc] != 0:
-        col = mc
-        for r1 in cal_row(col):
-            if r1 in rrows:
-                n = solven(rrows, rcolumns,col_head, sboard, r1, n)
-                if n == 0:
-                    return 0
+        n = n-1
+        if not check_error(sboard):
+            raise ValueError("Board not possible")
+        print_board(sboard)
+        print("\n")
+    else:
+        mc = min(rcolumns, key=lambda c:col_head[c])
+        if col_head[mc] != 0:
+            col = mc
+            for r1 in cal_row(col):
+                if r1 in rrows:
+                    n = solven(rrows, rcolumns,col_head, sboard, r1, n)
+                    if n == 0:
+                        break
     if row is not None:
         sboard.pop()
         for c1 in pc:
@@ -78,6 +83,45 @@ def solven(rrows, rcolumns, col_head, sboard, row=None, n=1):
                 col_head[c2] += 1
     return n
 
+def check_error(board1):
+    """Check if the board is correct, return True if it's correct"""
+    if len(board1) != 81:
+        return False
+    s1 = set()
+    for i in board1:
+        v = i//9
+        if v in s1:
+            return False
+        s1.add(v)
+    s1 = set()
+    for i in board1:
+        v = i//81*9+i%9
+        if v in s1:
+            return False
+        s1.add(v)
+    s1 = set()
+    for i in board1:
+        v = i%81
+        if v in s1:
+            return False
+        s1.add(v)
+    s1 = set()
+    for i in board1:
+        v = i//243*27+i%81//27*9+i%9
+        if v in s1:
+            return False
+        s1.add(v)
+    return True
+
+def print_board(board1):
+    """Print the board if it is completed"""
+    if not check_error(board1):
+        print("error")
+    l1 = ["0" for i in range(81)]
+    for i in board1:
+        l1[i//9] = str(i%9+1)
+    for i in range(9):
+        print("".join(l1[i*9:i*9+9]))
 
 # read board from file
 board = []
@@ -90,6 +134,7 @@ with open("test3.txt", "r", encoding="utf-8") as file:
             for c,j in enumerate(b[10*r+1:10*r+10]):
                 if j!=" ":
                     board.append(r*81+c*9+int(j)-1)
+print(board)
 
 t1 = time()
 
@@ -104,10 +149,8 @@ for nu in board:
             for r in cal_row(c):
                 if r in rows:
                     rows.remove(r)
-                    if r==11:
-                        pass
                     for c3 in cal_col(r):
                         columns_head[c3] -= 1
 
-print(solven(rows, columns, columns_head, board, 1))
+print(solven(rows, columns, columns_head, board, None, -1))
 print(f"Overall time: {time()-t1}s")
