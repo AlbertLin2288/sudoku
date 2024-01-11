@@ -38,11 +38,16 @@ def from_int(rp):
     """generate Aa1... from row num"""
     return "ABCDEFGHI"[rp//81]+"abcdefghi"[rp//9%9]+str(rp%9+1)
 
-def set_values(rrows, rcolumns, col_head, row_nums):
-    """set the row_nums to true"""
-    for nu in row_nums:
+def set_values(rrows, rcolumns, col_head, row_nums, sboard):
+    """set the row_nums to true
+    new: also make moves that are certain
+    assume no prior certain(col_head=1) exist"""
+    while row_nums:
+        nu = row_nums.pop(0)
         if nu in rrows:
+            sboard.append(nu)
             rc = cal_col(nu)
+            redcol = set()
             for c in rc:
                 if c in rcolumns:
                     rcolumns.remove(c)
@@ -51,6 +56,16 @@ def set_values(rrows, rcolumns, col_head, row_nums):
                             rrows.remove(r)
                             for c3 in cal_col(r):
                                 col_head[c3] -= 1
+                                redcol.add(c3)
+            # col_head=1 mean it's not remove(no row added to solution)
+            # and that the remaining row is True. So as long as col_head -=1
+            # is together with col remove, we should be fine
+            for c in redcol:
+                if col_head[c] == 1:# certain
+                    for r in cal_row(c):
+                        row_nums.append(r)
+                        # check in rrows will come in next iter,
+                        # so does check dupe as rrows get removed
 
 def solven(rrows, rcolumns, col_head, sboard, row=None, n=1):
     """find if it has more or equal n solution"""
@@ -95,7 +110,54 @@ def solven(rrows, rcolumns, col_head, sboard, row=None, n=1):
                 col_head[c2] += 1
     return n
 
-def simpifle(rrows, rcolumns, col_head, sboard):
+def solve2(rrows, rcolumns, col_head, sboard, row=None, n=2):
+    """find if it has 0,1 or 2 or more solution"""
+    if n == 0:
+        print("Hi1") # shouldn't be called
+        return 0,[]
+    if len(rcolumns) == 0:
+        print("Hi2")
+        return n-1,[]
+    if row is not None:
+        pc = set()
+        pr = set()
+        sboard.append(row)
+        for c1 in cal_col(row):
+            if c1 in rcolumns:
+                for r1 in cal_row(c1):
+                    if r1 in rrows:
+                        rrows.remove(r1)
+                        pr.add(r1)
+                        for c2 in cal_col(r1):
+                            col_head[c2] -= 1
+                rcolumns.remove(c1)
+                pc.add(c1)
+    if len(rcolumns) == 0:
+        n = n-1
+    else:
+        no = n
+        mc = min(rcolumns, key=lambda c:col_head[c])
+        if col_head[mc] != 0:
+            col = mc
+            for r1 in cal_row(col):
+                if r1 in rrows:
+                    n, twos = solven(rrows, rcolumns,col_head, sboard, r1, n)
+                    if n == 0:
+                        break
+    if row is not None:
+        sboard.pop()
+        for c1 in pc:
+            rcolumns.add(c1)
+        for r1 in pr:
+            rrows.add(r1)
+            for c2 in cal_col(r1):
+                col_head[c2] += 1
+        if no-n == 2:
+            # This row has 2 solution
+            twos.append(row)
+    return n, twos
+
+def simpifle1(rrows, rcolumns, col_head, sboard):
     """simpily check for those columns with only one elements"""
     while True:
         if len(rcolumns) == 0:
@@ -114,6 +176,36 @@ def simpifle(rrows, rcolumns, col_head, sboard):
                                     for c2 in cal_col(r2):
                                         col_head[c2] -= 1
                             rcolumns.remove(c1)
+        else:
+            break
+
+def simpifle2(rrows, rcolumns, col_head, sboard):
+    """check if all move has two solutions
+    if not, delete the row and solven, but only when mc=1(simpifle1)
+    require there to be no mc=1 beforehand"""
+    unchecked = rrows.copy()
+    while unchecked:
+        # check solven
+        row = unchecked.pop()
+        n, twos = solven(rrows, rcolumns, col_head, sboard, row, n=2)
+        if n == 0: # ok
+            for r in twos:
+                if r in unchecked:
+                    unchecked.remove(r)
+            continue
+        if n == 1:
+            #return solution
+            return row
+        # remove row and make confirmed moves
+        rrows.remove(row)
+        for c1 in cal_col(row):
+            col_head[c1] -= 1
+            # assuming there is still a solution, col_head couldn't be zero
+            # unless a row that is possible was removed, at which it will be
+            # removed from rcolumns
+            if col_head[c1] == 1:
+                set_values(rrows, rcolumns, col_head, (c1,), sboard)
+    return None
 
 # def check_solutions(rrows, rcolumns, col_head, check_vals, sboard, row=None):
 #     """Check if all move grant two solutions
@@ -183,13 +275,11 @@ while True:
     if ins == "Quit":
         break
     if ins == "start":
-        set_values(rows, columns, columns_head, (0,))
-        board.append(0)
+        set_values(rows, columns, columns_head, (0,), board)
         print("Aa1", flush=True)
         continue
     move = to_int(ins)
-    set_values(rows, columns, columns_head, (move,))
-    board.append(move)
+    set_values(rows, columns, columns_head, (move,), board)
     # Simplify
     # 1.Check if all elements in rows has 1 solutions
     # remove those that are not
@@ -197,5 +287,10 @@ while True:
     # check if they have two solutions
     # if not, do it and win
     # if a location has only one solution, steps should remove them
-    simpifle(rows, columns, columns_head, board)
+    win = simpifle2(rows, columns, columns_head, board)
+    if win is not None:
+        if win in rows:
+            print(from_int(win)+"!", flush=True)
+        else:
+            print("!")
     # do something
