@@ -134,6 +134,7 @@ def solve2(rrows, rcolumns, col_head, sboard, row=None, n=2):
                 pc.add(c1)
     if len(rcolumns) == 0:
         n = n-1
+        twos = []
     else:
         no = n
         mc = min(rcolumns, key=lambda c:col_head[c])
@@ -141,9 +142,14 @@ def solve2(rrows, rcolumns, col_head, sboard, row=None, n=2):
             col = mc
             for r1 in cal_row(col):
                 if r1 in rrows:
-                    n, twos = solven(rrows, rcolumns,col_head, sboard, r1, n)
+                    n, twos = solve2(rrows, rcolumns,col_head, sboard, r1, n)
                     if n == 0:
                         break
+            if no-n == 2:
+                # This row has 2 solution
+                twos.append(row)
+        else:
+            twos = []
     if row is not None:
         sboard.pop()
         for c1 in pc:
@@ -152,9 +158,6 @@ def solve2(rrows, rcolumns, col_head, sboard, row=None, n=2):
             rrows.add(r1)
             for c2 in cal_col(r1):
                 col_head[c2] += 1
-        if no-n == 2:
-            # This row has 2 solution
-            twos.append(row)
     return n, twos
 
 def simpifle1(rrows, rcolumns, col_head, sboard):
@@ -187,7 +190,7 @@ def simpifle2(rrows, rcolumns, col_head, sboard):
     while unchecked:
         # check solven
         row = unchecked.pop()
-        n, twos = solven(rrows, rcolumns, col_head, sboard, row, n=2)
+        n, twos = solve2(rrows, rcolumns, col_head, sboard, row, n=2)
         if n == 0: # ok
             for r in twos:
                 if r in unchecked:
@@ -204,7 +207,7 @@ def simpifle2(rrows, rcolumns, col_head, sboard):
             # unless a row that is possible was removed, at which it will be
             # removed from rcolumns
             if col_head[c1] == 1:
-                set_values(rrows, rcolumns, col_head, (c1,), sboard)
+                set_values(rrows, rcolumns, col_head, [c1], sboard)
     return None
 
 # def check_solutions(rrows, rcolumns, col_head, check_vals, sboard, row=None):
@@ -275,11 +278,11 @@ while True:
     if ins == "Quit":
         break
     if ins == "start":
-        set_values(rows, columns, columns_head, (0,), board)
+        set_values(rows, columns, columns_head, [0], board)
         print("Aa1", flush=True)
         continue
     move = to_int(ins)
-    set_values(rows, columns, columns_head, (move,), board)
+    set_values(rows, columns, columns_head, [move], board)
     # Simplify
     # 1.Check if all elements in rows has 1 solutions
     # remove those that are not
@@ -293,4 +296,48 @@ while True:
             print(from_int(win)+"!", flush=True)
         else:
             print("!")
+        continue
+    move = rows.pop()
+    rows.update((move,))
+    print(from_int(move))
+    set_values(rows, columns, columns_head, [move], board)
     # do something
+
+
+# first game played against me(I had sudoku10c)
+
+# start
+# Aa1
+# Ab2
+# Bh1
+# Ac3
+# Ad4
+# Ae5
+# Fa9
+# Af6
+# Bi5
+# Ag9
+# Ca6
+# Af6
+# Ba8
+# Gc6
+# Cb5
+# Ga3
+# Fe2
+# Hh4
+# Cd7
+# Ei1
+# Ce1
+# Ie9
+# Ff1
+# Dd6
+# Cg4
+# Ge7
+# Ch2
+# Id1
+# Fb3
+# Ic2
+# Gb4
+# Dg3
+# Dc7!
+# Quit
