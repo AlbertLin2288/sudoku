@@ -99,9 +99,10 @@ def set_values(rrows, rcolumns, col_head, row_nums, sboard):
             for c in redcol:
                 if col_head[c] == 1:# certain
                     for r in cal_row(c):
-                        row_nums.append(r)
-                        # check in rrows will come in next iter,
-                        # so does check dupe as rrows get removed
+                        if r in rrows:
+                            row_nums.append(r)
+                            # check dupe will come in next iter,
+                            # as rrows get removed
 
 def solven(rrows, rcolumns, col_head, sboard, row=None, n=1):
     """find if it has more or equal n solution"""
@@ -254,7 +255,7 @@ def simpify22(rrows, rcolumns, col_head, sboard):
                 if col_head[c1] == 1:
                     for r2 in cal_row(c1):
                         if r2 in rrows:
-                            set_values(rrows, rcolumns, col_head, [c1], sboard)
+                            set_values(rrows, rcolumns, col_head, [r2], sboard)
             if 110 not in rrows:
                 pass
             row_num = {i:j for i,j in row_num.items() if i in rrows}
@@ -272,8 +273,9 @@ board = []
 step = 0
 while True:
     ttotal += time() - t1
-    print(f"step {str(step)} took {str(time()-t1)} seconds, totaling" +
+    print(f"step {str(step)} took {str(time()-t1)} seconds, totaling " +
           f"{str(ttotal)} seconds,\n", file=sys.stderr)
+    step += 1
     ins = input()
     t1 = time()
     if ins == "Quit":
