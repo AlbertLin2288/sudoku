@@ -300,7 +300,7 @@ def simpifle2(rrows, rcolumns, col_head, sboard):
                 set_values(rrows, rcolumns, col_head, [c1], sboard)
     return None
 
-def simplify22(rrows, rcolumns, col_head, sboard):
+def simpify22(rrows, rcolumns, col_head, sboard):
     """Find a move that bring an instant win, or find one that isn't instant
     loses.
     check the number of solutions left for all move
@@ -327,7 +327,7 @@ def simplify22(rrows, rcolumns, col_head, sboard):
         new_val = len(solutions)-current + min_val
         if new_val == 1:
             #return solution
-            return row
+            return True, row
         for dif in difs:
             for p in range(81):
                 r1 = p*9+fast_int1(dif[p])-1
@@ -358,7 +358,7 @@ def simplify22(rrows, rcolumns, col_head, sboard):
                             max_val -= 1
         if len(row_num[min_val]) == 0:
             min_val += 1
-    return num_row[max_val].pop()
+    return False, num_row[max_val].pop()
 
 # def check_solutions(rrows, rcolumns, col_head, check_vals, sboard, row=None):
 #     """Check if all move grant two solutions
@@ -453,16 +453,14 @@ while True:
     # Other things:
     # Check if all move is possible
     # Check if a move is certain
-    win = simpifle2(rows, columns, columns_head, board)
-    if win is not None:
-        if win in rows:
-            print(from_int(win)+"!", flush=True)
-        else:
-            print("!")
+    win = solven(rows, columns, columns_head, board, n=2) == 1
+    if win:
+        print("!",flush=True)
+    win, move = simpify22(rows, columns, columns_head, board)
+    if win:
+        print(from_int(move)+"!", flush=True)
         continue
-    move = rows.pop()
-    rows.update((move,))
-    print(from_int(move))
+    print(from_int(move), flush=True)
     set_values(rows, columns, columns_head, [move], board)
     # do something
 
