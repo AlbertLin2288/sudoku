@@ -330,7 +330,9 @@ def simpify22(rrows, rcolumns, col_head, sboard):
             return True, row
         for dif in difs:
             for p in range(81):
-                r1 = p*9+fast_int1(dif[p])-1
+                r1 = p*9+fast_int1(dif[p])
+                if r1 not in row_num:
+                    continue
                 n1 = row_num[r1]
                 num_row[n1].remove(r1)
                 if n1 == max_val:
@@ -344,19 +346,14 @@ def simpify22(rrows, rcolumns, col_head, sboard):
             for c1 in cal_col(row):
                 col_head[c1] -= 1
                 # assuming there is still a solution, col_head couldn't be zero
-                # unless a row that is possible was removed, at which it will be
-                # removed from rcolumns
+                # unless a row that is possible was removed, at which it will
+                # be removed from rcolumns
                 if col_head[c1] == 1:
                     set_values(rrows, rcolumns, col_head, [c1], sboard)
-            for r1 in row_num:
-                if r1 not in rrows:
-                    n1 = row_num[r1]
-                    num_row[n1].remove(r1)
-                    row_num.pop(r1)
-                    if n1 == max_val:
-                        while len(num_row[max_val]) == 0:
-                            max_val -= 1
-        if len(row_num[min_val]) == 0:
+            row_num = {i:j for i,j in row_num.items() if i in rrows}
+            num_row = {i:j.intersection(rrows) for i,j in num_row.items()}
+            max_val = max(row_num.values())
+        while len(num_row[min_val]) == 0:
             min_val += 1
     return False, num_row[max_val].pop()
 
@@ -427,7 +424,7 @@ while True:
     ins = input()
     if ins == "Quit":
         break
-    if ins == "start":
+    if ins == "Start":
         set_values(rows, columns, columns_head, [0], board)
         print("Aa1", flush=True)
         continue
