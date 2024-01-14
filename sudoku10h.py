@@ -274,7 +274,7 @@ step = 0
 while True:
     ttotal += time() - t1
     print(f"step {str(step)} took {str(time()-t1)} seconds, totaling " +
-          f"{str(ttotal)} seconds,\n", file=sys.stderr)
+          f"{str(ttotal)} seconds,", file=sys.stderr)
     step += 1
     ins = input()
     t1 = time()
