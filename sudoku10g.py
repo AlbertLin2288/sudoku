@@ -320,6 +320,8 @@ def simpify22(rrows, rcolumns, col_head, sboard):
     while min_val<2:
         # check solven
         row = num_row[min_val].pop()
+        if row == 340:
+            pass
         num_row[min_val].update((row,))
         current = len(solutions)
         difs = solvedif(rrows, rcolumns, col_head, sboard, solutions,
@@ -349,70 +351,15 @@ def simpify22(rrows, rcolumns, col_head, sboard):
                 # unless a row that is possible was removed, at which it will
                 # be removed from rcolumns
                 if col_head[c1] == 1:
-                    set_values(rrows, rcolumns, col_head, [c1], sboard)
+                    for r2 in cal_col(c1):
+                        if r2 in rrows:
+                            set_values(rrows, rcolumns, col_head, [c1], sboard)
             row_num = {i:j for i,j in row_num.items() if i in rrows}
             num_row = {i:j.intersection(rrows) for i,j in num_row.items()}
             max_val = max(row_num.values())
         while len(num_row[min_val]) == 0:
             min_val += 1
     return False, num_row[max_val].pop()
-
-# def check_solutions(rrows, rcolumns, col_head, check_vals, sboard, row=None):
-#     """Check if all move grant two solutions
-#     Method one: check if all rows appears twice in a non-repeating search
-#     solven's argithrim is non-repeating, but that only allow branch at the
-#     branch with least branches"""
-#     # Is it possible to do it faster?
-#     # for some combination 1,2,3,4 and check if there is a number that appeared only
-#     # once at a position, at most need 24 check
-#     # test case: 124 132 122 243 233 231 234 213 334 222
-#     # solven: 122 124 132 213 222 231 233 234 243 334
-#     # 301 602 103 004 111 312 513 114 121 322 323 324
-#     # for soduko that is 9**3*2=1458
-#     # let's just try solven
-#     # check_vals is dict with keys being to_check
-#     #
-#     # if n == 0:
-#     #     print("Hi1") # shouldn't be called
-#     #     return 0
-#     # if len(rcolumns) == 0:
-#     #     print("Hi2")
-#     #     return n-1
-#     if row is not None:
-#         pc = set()
-#         pr = set()
-#         sboard.append(row)
-#         for c1 in cal_col(row):
-#             if c1 in rcolumns:
-#                 for r1 in cal_row(c1):
-#                     if r1 in rrows:
-#                         rrows.remove(r1)
-#                         pr.add(r1)
-#                         for c2 in cal_col(r1):
-#                             col_head[c2] -= 1
-#                 rcolumns.remove(c1)
-#                 pc.add(c1)
-#     if len(rcolumns) == 0:
-#         # n = n-1
-#         for r1 in sboard:
-#             if r1 in check_vals:
-#                 check_vals[r1] += 1
-#     else:
-#         mc = min(rcolumns, key=lambda c:col_head[c])
-#         if col_head[mc] != 0:
-#             col = mc
-#             for r1 in cal_row(col):
-#                 if r1 in rrows:
-#                     check_solutions(rrows, rcolumns,col_head, check_vals, sboard, r1)
-#     if row is not None:
-#         sboard.pop()
-#         for c1 in pc:
-#             rcolumns.add(c1)
-#         for r1 in pr:
-#             rrows.add(r1)
-#             for c2 in cal_col(r1):
-#                 col_head[c2] += 1
-
 
 
 t1 = time()
