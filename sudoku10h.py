@@ -221,7 +221,7 @@ def simpify22(rrows, rcolumns, col_head, sboard):
     while min_val<2:
         # check solven
         row = num_row[min_val].pop()
-        if row == 340:
+        if row == 110:
             pass
         num_row[min_val].update((row,))
         current = len(solutions)
@@ -252,9 +252,11 @@ def simpify22(rrows, rcolumns, col_head, sboard):
                 # unless a row that is possible was removed, at which it will
                 # be removed from rcolumns
                 if col_head[c1] == 1:
-                    for r2 in cal_col(c1):
+                    for r2 in cal_row(c1):
                         if r2 in rrows:
                             set_values(rrows, rcolumns, col_head, [c1], sboard)
+            if 110 not in rrows:
+                pass
             row_num = {i:j for i,j in row_num.items() if i in rrows}
             num_row = {i:j.intersection(rrows) for i,j in num_row.items()}
             max_val = max(row_num.values())
