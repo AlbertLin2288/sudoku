@@ -5,8 +5,6 @@
 
 from time import time
 import sys
-t1 = time()
-ttotal = 0
 
 def cal_col(rp):
     """calculate which rules num is in"""
@@ -266,16 +264,17 @@ def simpify22(rrows, rcolumns, col_head, sboard):
     return False, num_row[max_val].pop()
 
 
+t1 = time()
+ttotal = 0
 rows = set(range(729))
 columns = set(range(324))
 columns_head = [9 for i in range(324)]
 board = []
-step = 0
+ttotal += time() - t1
+print(f"init took {str(time()-t1)} seconds, totaling " +
+    f"{str(ttotal)} seconds,", file=sys.stderr)
+step = 1
 while True:
-    ttotal += time() - t1
-    print(f"step {str(step)} took {str(time()-t1)} seconds, totaling " +
-          f"{str(ttotal)} seconds,", file=sys.stderr)
-    step += 1
     ins = input()
     t1 = time()
     if ins == "Quit":
@@ -294,5 +293,9 @@ while True:
         print(from_int(move)+"!", flush=True)
         continue
     set_values(rows, columns, columns_head, [move], board)
-    print(from_int(move), flush=True)
     # do something
+    ttotal += time() - t1
+    print(f"step {str(step)} took {str(time()-t1)} seconds, totaling " +
+          f"{str(ttotal)} seconds,", file=sys.stderr)
+    step += 1
+    print(from_int(move), flush=True)
