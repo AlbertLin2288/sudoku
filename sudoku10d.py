@@ -77,10 +77,30 @@
 # Imagine a bipartite graph with one set of vertex U denoting all
 # possible solution, and the other set V representing all possible
 # position and value to be filled in(e.g. Aa1, Bd3). A edge connect
-# two vertex if the position and the value is valid in the solution.
+# the vertex if the position and the value is wrong in the solution.
 # What the players take turns to do is to choose a vertex v in V, and
-# remove all vertex in U that are not connected to v. To win, a player
-# shall remove v and cause only one element to remain in U.(This remind
+# remove all vertex in U that is connected to v. To win, a player need
+# to remove v and leaving only one element remaining in U. (This remind
 # me of reading about nim(Game theory) in wikipedia) The next player win
-# after there exist a vertex v such that there is only one u connected to
-# it.
+# when a vertex v is created such that all but one u has a edge connected
+# to it. The previous board must satisfiles A: there is no way to win, and
+# B: every move will create wining situration. So there is
+# Sorry, not working
+#
+# Attampt 3:
+# The graph is multipartite, with fist layer solutions, second layer values,
+# and third layer locations. It should be noted that there can be two of the
+# same value in second layer, but having different location. Each value only
+# connect to one location. And a move is made by choosing a value node, then
+# removing every solutions connected to all other values which are connected
+# to the same location. So if a certain value is only linked to one possible
+# solution, the next player will win by picking that node. So if a move left
+# a value connected to one solution, the opponent would win. Such a move has
+# to happen between a pair of values that is connected only by one solution.
+# Now we will analyse the indication for such a pair with our program first,
+# then move on to continue study the effect of this on our theory of sudoku.
+# In normal language, that mean there is only one solution with that pair of
+# values. In our program the order of location is not exact determinstic(You
+# have to consider if different values are chosen, the order for the rest of
+# column(rule) could change.)
+#
